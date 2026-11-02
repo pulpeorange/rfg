@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&lt;RFG&gt; Le Refuge · Suivi de l'alliance</title>
+<meta name="description" content="Tableau de bord de l'alliance <RFG> Le Refuge sur Last Beacon : effectif, puissance, activité des membres.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 150'><path d='M18 17 H102 V128 L60 112 L18 128 Z' fill='%236a3fd1' stroke='%23f2c94c' stroke-width='6'/><circle cx='60' cy='62' r='27' fill='none' stroke='white' stroke-width='6'/></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+  :root {
+    --font-anthropic-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-anthropic-serif: Georgia, "Times New Roman", serif;
+    --cds-font-size-caption: .8rem; --cds-font-size-body: .95rem; --cds-font-size-heading: 1.1rem; --cds-font-size-title: 2rem;
+    --cds-font-weight-medium: 600;
+    --cds-gap-xs: 4px; --cds-gap-sm: 8px; --cds-gap-md: 16px; --cds-gap-lg: 28px;
+    --cds-pad-xs: 4px; --cds-pad-sm: 8px; --cds-pad-lg: 20px;
+    --cds-radius: 8px; --cds-dur-slow: .4s;
+  }
+  html, body { margin: 0; background: #06122a; }
+  #dash-root { max-width: 1280px; margin: 0 auto; padding: clamp(0px, 2vw, 24px); box-sizing: border-box; }
+  .dash-skeleton { min-height: 180px; }
+</style>
+<script>
+window.dash = (() => {
+  const calcs = [], draws = {}, onDatas = [], store = {};
+  let state = 'loading';
+  const runDraw = (name) => document.querySelectorAll(`[data-draw="${name}"]`).forEach((el) => { try { draws[name](el); } catch (e) { console.error(e); } });
+  const all = () => { onDatas.forEach((f) => { try { f(); } catch (e) { console.error(e); } }); Object.keys(draws).forEach(runDraw); };
+  const api = {
+    colors: ['#f2c94c', '#a985ff', '#40a0ff', '#5ee3a1', '#ff7a7a', '#ffc857', '#6a3fd1', '#9fb6d6'],
+    calc(id, o) { calcs.push({id, ...o}); },
+    loader() {},
+    data(id) { return id in store ? {status: 'ok', data: store[id], columns: [], meta: []} : {status: state === 'error' ? 'error' : 'loading', data: [], columns: [], meta: []}; },
+    draw(name, fn) { if (fn) draws[name] = fn; else if (draws[name]) runDraw(name); },
+    onData(fn) { onDatas.push(fn); },
+    params: () => ({}), setParams() {}, resetParams() {}, setLink() {}, refresh() {},
+  };
+  window.addEventListener('DOMContentLoaded', () => {
+    all();
+    fetch('data/releves.json', {cache: 'no-store'}).then((r) => r.json()).then((j) => {
+      store.releves = j.rows || j;
+      for (const c of calcs) store[c.id] = c.fn(...c.inputs.map((i) => store[i] || []));
+      state = 'ok'; all();
+    }).catch((e) => { console.error(e); state = 'error'; all(); });
+    let w = innerWidth; addEventListener('resize', () => { if (Math.abs(innerWidth - w) > 20) { w = innerWidth; all(); } });
+  });
+  return api;
+})();
+</script>
+</head>
+<body>
+<div id="dash-root">
+<style>
+  
+  .rfg {
+    --or: #f2c94c; --or-pale: #f7e3a1; --violet: #6a3fd1; --violet-clair: #a985ff;
+    --texte: #eaf2ff; --muet: #9fb6d6; --bord: rgba(242, 201, 76, .28); --carte: rgba(14, 38, 74, .72);
+    --ok: #5ee3a1; --warn: #ffc857; --bad: #ff7a7a;
+    font-family: var(--font-anthropic-sans); color: var(--texte);
+    display: flex; flex-direction: column; gap: var(--cds-gap-lg);
+    padding: clamp(14px, 3vw, 36px); border-radius: 20px; overflow: hidden; position: relative;
+    background:
+      radial-gradient(1200px 400px at 85% -10%, rgba(169, 133, 255, .28), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, rgba(64, 160, 255, .22), transparent 60%),
+      linear-gradient(180deg, #0d2a52 0%, #0b2246 45%, #081733 100%);
+    box-shadow: inset 0 0 0 1px rgba(242, 201, 76, .18);
+  }
+  .rfg::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 120px; pointer-events: none; opacity: .5;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='40' viewBox='0 0 240 40'><path d='M0 20 Q30 5 60 20 T120 20 T180 20 T240 20' fill='none' stroke='%2340a0ff' stroke-opacity='.25' stroke-width='2'/><path d='M0 32 Q30 17 60 32 T120 32 T180 32 T240 32' fill='none' stroke='%2340a0ff' stroke-opacity='.15' stroke-width='2'/></svg>") repeat-x bottom;
+  }
+  .rfg > * { position: relative; z-index: 1; }
+
+  /* En-tête */
+  .rfg .hero { display: grid; grid-template-columns: auto 1fr; gap: clamp(14px, 3vw, 32px); align-items: center; }
+  .rfg .blason { width: clamp(72px, 12vw, 120px); filter: drop-shadow(0 8px 18px rgba(106, 63, 209, .55)); }
+  .rfg .surtitre { color: var(--or); letter-spacing: .18em; text-transform: uppercase; font-size: var(--cds-font-size-caption); font-weight: 600; margin: 0 0 6px; }
+  .rfg h1 { font-family: var(--font-anthropic-serif); font-weight: 400; margin: 0; line-height: 1.05;
+    font-size: clamp(2rem, 5.5vw, 3.6rem); color: #fff; text-shadow: 0 2px 18px rgba(242, 201, 76, .25); }
+  .rfg h1 .tag { color: var(--or); }
+  .rfg .devise { margin: 8px 0 0; color: var(--muet); font-style: italic; }
+  .rfg .puces { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .rfg .puce { font-size: var(--cds-font-size-caption); padding: 4px 10px; border-radius: 999px; border: 1px solid var(--bord); background: rgba(255, 255, 255, .05); color: var(--or-pale); }
+  .rfg .lead { margin: 0; padding: 12px 16px; border-left: 3px solid var(--or); background: rgba(242, 201, 76, .07); border-radius: 0 10px 10px 0; font-size: var(--cds-font-size-body); color: var(--texte); }
+  .rfg .lead b { color: var(--or); font-weight: 600; }
+  @media (max-width: 520px) { .rfg .hero { grid-template-columns: 1fr; justify-items: start; } }
+
+  /* Titres et cartes */
+  .rfg h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; color: #fff; display: flex; align-items: center; gap: 8px; }
+  .rfg .ancre::before { content: "⚓"; color: var(--or); font-size: .9em; }
+  .rfg .note { color: var(--muet); font-size: var(--cds-font-size-caption); margin: var(--cds-gap-xs) 0 var(--cds-gap-md); }
+  .rfg .card { background: var(--carte); border: 1px solid var(--bord); border-radius: 16px; padding: var(--cds-pad-lg); min-width: 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .25), inset 0 1px 0 rgba(255, 255, 255, .06); backdrop-filter: blur(4px); }
+  .rfg .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: var(--cds-gap-md); }
+
+  /* Chiffres clés */
+  .rfg .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: var(--cds-gap-md); }
+  .rfg .tiles .card { border-top: 3px solid var(--or); }
+  .rfg .tiles .card:nth-child(2n) { border-top-color: var(--violet-clair); }
+  .rfg .kpi-l { color: var(--muet); font-size: var(--cds-font-size-caption); text-transform: uppercase; letter-spacing: .08em; }
+  .rfg .kpi-v { display: block; font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; margin: 6px 0; color: var(--or); }
+  .rfg .kpi-d { font-size: var(--cds-font-size-caption); color: var(--muet); font-variant-numeric: tabular-nums; }
+  .rfg .up { color: var(--ok); } .rfg .down { color: var(--bad); }
+
+  /* Graphiques */
+  .rfg .chart { position: relative; min-height: 180px; }
+  .rfg .tip { position: absolute; pointer-events: none; background: #0b1f3a; border: 1px solid var(--bord); border-radius: 8px; box-shadow: 0 8px 20px rgba(0, 0, 0, .4); padding: 4px 8px; font-size: var(--cds-font-size-caption); white-space: nowrap; color: var(--texte); }
+  .rfg .tip .t { color: var(--muet); }
+
+  /* Tableaux */
+  .rfg .tools { display: flex; gap: var(--cds-gap-sm); flex-wrap: wrap; margin-bottom: var(--cds-gap-sm); }
+  .rfg input[type=search], .rfg select { font: inherit; font-size: var(--cds-font-size-body); padding: 6px 12px; border: 1px solid var(--bord); border-radius: 10px; background: rgba(8, 23, 51, .8); color: var(--texte); }
+  .rfg input[type=search] { flex: 1 1 12rem; }
+  .rfg input[type=search]::placeholder { color: var(--muet); }
+  .rfg .tbox { max-height: 30rem; overflow: auto; border-radius: 10px; }
+  .rfg table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-body); font-variant-numeric: tabular-nums; color: var(--texte); }
+  .rfg th { position: sticky; top: 0; background: #12305a; text-align: left; font-weight: 600; color: var(--or-pale); border-bottom: 1px solid var(--bord); padding: 8px 10px; white-space: nowrap; z-index: 1; }
+  .rfg th button { all: unset; cursor: pointer; }
+  .rfg th[aria-sort=ascending] button::after { content: " ↑"; color: var(--or); }
+  .rfg th[aria-sort=descending] button::after { content: " ↓"; color: var(--or); }
+  .rfg td { padding: 7px 10px; border-bottom: 1px solid rgba(159, 182, 214, .12); white-space: nowrap; }
+  .rfg tbody tr:hover td { background: rgba(242, 201, 76, .06); }
+  .rfg td.num, .rfg th.num { text-align: right; }
+  .rfg .pill { font-size: var(--cds-font-size-caption); padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; }
+  .rfg .pill.bad { color: var(--bad); } .rfg .pill.warn { color: var(--warn); } .rfg .pill.ok { color: var(--ok); }
+  .rfg .pied { text-align: center; color: var(--muet); font-size: var(--cds-font-size-caption); margin: 0; }
+  @media (max-width: 640px) { .rfg .hide-n { display: none; } }
+  [data-dash-source-state=empty] { color: transparent; }
+  [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+</style>
+
+<div class="rfg">
+  <header class="hero">
+    <svg class="blason" viewBox="0 0 120 150" role="img" aria-label="Bannière de l'alliance">
+      <defs>
+        <linearGradient id="rfg-ban" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#5b2fc0"/></linearGradient>
+        <linearGradient id="rfg-or" x1="0" x2="1"><stop offset="0" stop-color="#c99a2e"/><stop offset=".5" stop-color="#f7e3a1"/><stop offset="1" stop-color="#c99a2e"/></linearGradient>
+      </defs>
+      <rect x="6" y="8" width="108" height="9" rx="4.5" fill="url(#rfg-or)"/>
+      <circle cx="8" cy="12.5" r="7" fill="url(#rfg-or)"/><circle cx="112" cy="12.5" r="7" fill="url(#rfg-or)"/>
+      <path d="M18 17 H102 V128 L60 112 L18 128 Z" fill="url(#rfg-ban)" stroke="#f2c94c" stroke-width="2"/>
+      <circle cx="60" cy="62" r="27" fill="none" stroke="#fff" stroke-width="4"/>
+      <path d="M60 41 L65.6 55.6 L81 56 L68.8 65.6 L73.2 80.6 L60 71.8 L46.8 80.6 L51.2 65.6 L39 56 L54.4 55.6 Z" fill="#fff"/>
+    </svg>
+    <div>
+      <p class="surtitre">Last Beacon · Tableau de bord d'alliance</p>
+      <h1><span class="tag">&lt;RFG&gt;</span> Le Refuge</h1>
+      <p class="devise">« Que les vagues soient douces ou déchaînées, notre navire tient le cap. »</p>
+      <div class="puces">
+        <span class="puce">Chef d'alliance : Şeβ</span>
+        <span class="puce">🇫🇷 Alliance francophone</span>
+        <span class="puce">Alliés : 1MP · ELF · AGV · AFR · POS · RTD</span>
+      </div>
+    </div>
+  </header>
+
+  <p class="lead">Relevé du <b data-draw="dernier-date" data-source="dernier" data-field="date" data-row="0">—</b> : <b data-draw="kpi" data-source="dernier" data-field="membres" data-row="0" data-fmt="int">—</b> membres à bord, dont <b data-draw="kpi" data-source="dernier" data-field="inactifs_7j" data-row="0" data-fmt="int">—</b> absents depuis plus de 7 jours, à relancer ou à remplacer en priorité.</p>
+
+
+  <section class="tiles" aria-label="Chiffres clés">
+    <div class="card"><span class="kpi-l">Membres</span>
+      <span class="kpi-v" data-draw="kpi" data-source="dernier" data-field="membres" data-row="0" data-fmt="int">—</span>
+      <span class="kpi-d" data-draw="delta" data-source="dernier" data-field="d_membres" data-row="0" data-fmt="int">—</span></div>
+    <div class="card"><span class="kpi-l">Puissance totale</span>
+      <span class="kpi-v" data-draw="kpi" data-source="dernier" data-field="puissance_totale" data-row="0" data-fmt="md">—</span>
+      <span class="kpi-d" data-draw="delta" data-source="dernier" data-field="d_puissance" data-row="0" data-fmt="m">—</span></div>
+    <div class="card"><span class="kpi-l">Puissance moyenne</span>
+      <span class="kpi-v" data-draw="kpi" data-source="dernier" data-field="puissance_moy" data-row="0" data-fmt="m">—</span>
+      <span class="kpi-d" data-draw="delta" data-source="dernier" data-field="d_moy" data-row="0" data-fmt="m">—</span></div>
+    <div class="card"><span class="kpi-l">Connectés sur 24 h</span>
+      <span class="kpi-v" data-draw="kpi" data-source="dernier" data-field="actifs_24h" data-row="0" data-fmt="int">—</span>
+      <span class="kpi-d" data-draw="delta" data-source="dernier" data-field="d_actifs" data-row="0" data-fmt="int">—</span></div>
+    <div class="card"><span class="kpi-l">Absents &gt; 7 jours</span>
+      <span class="kpi-v" data-draw="kpi" data-source="dernier" data-field="inactifs_7j" data-row="0" data-fmt="int">—</span>
+      <span class="kpi-d" data-draw="delta" data-source="dernier" data-field="d_inactifs" data-row="0" data-fmt="int" data-inverse="1">—</span></div>
+  </section>
+
+  <section>
+    <h2 class="ancre" id="evolution">Évolution</h2>
+    <p class="note">Un point par relevé (quotidien à 17h, ou avant/après un événement). Les courbes se dessinent à partir du deuxième relevé.</p>
+    <div class="grid">
+      <div class="card"><h2>Effectif</h2><p class="note">Nombre de membres</p>
+        <div class="chart" data-draw="serie" data-source="synthese" data-field="membres" data-fmt="int"></div></div>
+      <div class="card"><h2>Puissance totale</h2><p class="note">Somme des puissances affichées</p>
+        <div class="chart" data-draw="serie" data-source="synthese" data-field="puissance_totale" data-fmt="md"></div></div>
+      <div class="card"><h2>Activité</h2><p class="note">Membres connectés dans les dernières 24 h</p>
+        <div class="chart" data-draw="serie" data-source="synthese" data-field="actifs_24h" data-fmt="int"></div></div>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card"><h2 class="ancre" id="rangs">Répartition par rang</h2><p class="note">Dernier relevé : membres et puissance cumulée par rang</p>
+      <div class="chart" data-draw="barres" data-source="rangs" data-label="rang"></div></div>
+    <div class="card"><h2 class="ancre" id="assiduite">Dernière connexion</h2><p class="note">Dernier relevé : membres par ancienneté de dernière connexion</p>
+      <div class="chart" data-draw="barres" data-source="activite" data-label="tranche"></div></div>
+  </section>
+
+  <section class="card">
+    <h2 class="ancre" id="mouvements">Arrivées et départs</h2>
+    <p class="note">Comparaison des deux derniers relevés</p>
+    <p class="note" data-empty="mouvements" hidden>Aucun mouvement à afficher : il faut au moins deux relevés.</p>
+    <div class="tbox"><table data-source="mouvements" data-row-key="membre">
+      <thead><tr><th data-field="mouvement">Mouvement</th><th data-field="membre">Membre</th><th data-field="rang">Rang</th><th class="num" data-field="puissance">Puissance</th></tr></thead>
+      <tbody data-draw="mouv"></tbody>
+    </table></div>
+  </section>
+
+  <section class="card">
+    <h2 class="ancre" id="membres">Membres</h2>
+    <p class="note">Dernier relevé. Variation : écart de puissance avec le relevé précédent. Puissances arrondies à 0,1 M comme dans le jeu.</p>
+    <div class="tools">
+      <input type="search" placeholder="Rechercher un membre" aria-label="Rechercher un membre" class="rfg-search">
+      <select class="rfg-filtre" aria-label="Filtrer par statut">
+        <option value="">Tous les statuts</option>
+        <option value="Actif">Actifs</option>
+        <option value="À surveiller">À surveiller (3 à 7 j)</option>
+        <option value="Absent">Absents (&gt; 7 j)</option>
+      </select>
+    </div>
+    <div class="tbox"><table data-source="membres" data-row-key="membre">
+      <thead><tr>
+        <th data-field="membre"><button data-sort="membre">Membre</button></th>
+        <th data-field="rang"><button data-sort="rang">Rang</button></th>
+        <th class="num" data-field="puissance" aria-sort="descending"><button data-sort="puissance">Puissance</button></th>
+        <th class="num" data-field="variation"><button data-sort="variation">Variation</button></th>
+        <th class="num hide-n" data-field="niveau"><button data-sort="niveau">Phare</button></th>
+        <th class="hide-n" data-field="connexion_h"><button data-sort="connexion_h">Dernière connexion</button></th>
+        <th data-field="statut"><button data-sort="statut">Statut</button></th>
+      </tr></thead>
+      <tbody data-draw="table"></tbody>
+    </table></div>
+  </section>
+
+  <section class="card">
+    <h2 class="ancre" id="evenements">Événements</h2>
+    <p class="note">Gain de puissance par membre entre le relevé « avant » et le relevé « après » de chaque événement.</p>
+    <p class="note" data-empty="evenements" hidden>Aucun événement relevé pour l'instant.</p>
+    <div class="tbox"><table data-source="evenements" data-row-key="evenement,membre">
+      <thead><tr><th data-field="evenement">Événement</th><th data-field="membre">Membre</th><th class="num" data-field="avant">Avant</th><th class="num" data-field="apres">Après</th><th class="num" data-field="gain">Gain</th></tr></thead>
+      <tbody data-draw="events"></tbody>
+    </table></div>
+  </section>
+  <p class="pied">Relevé automatique chaque jour à 17h · Données lues dans l'écran Membres de l'alliance · Puissances arrondies à 0,1 M</p>
+</div>
+
+<script>
+const RFG_C = {or: '#f2c94c', violet: '#6a3fd1', violetClair: '#a985ff', texte: '#eaf2ff', muet: '#9fb6d6', axe: 'rgba(242,201,76,.35)', nuit: '#0b1f3a'};
+
+dash.calc('instantanes', {
+  title: 'Liste des relevés',
+  description: 'Chaque relevé distinct (date, type, événement), dans l\'ordre chronologique.',
+  inputs: ['releves'],
+  fn: (releves) => {
+    const ordre = {Avant: 0, Hebdo: 1, 'Après': 2};
+    const m = new Map();
+    for (const r of releves) {
+      const cle = r.date + '|' + r.releve + '|' + (r.evenement || '');
+      if (!m.has(cle)) m.set(cle, {cle, date: String(r.date).slice(0, 10), releve: r.releve, evenement: r.evenement || ''});
+    }
+    return [...m.values()].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : (ordre[a.releve] ?? 1) - (ordre[b.releve] ?? 1));
+  }
+});
+
+dash.calc('synthese', {
+  title: 'Synthèse par relevé',
+  description: 'Effectif, puissance totale et moyenne, connectés sur 24 h et absents de plus de 7 jours, pour chaque relevé.',
+  inputs: ['releves', 'instantanes'],
+  fn: (releves, instantanes) => instantanes.map((s) => {
+    const rs = releves.filter((r) => r.date + '|' + r.releve + '|' + (r.evenement || '') === s.cle);
+    const tot = rs.reduce((a, r) => a + Number(r.puissance), 0);
+    return {cle: s.cle, date: s.date, releve: s.releve, evenement: s.evenement, membres: rs.length,
+      puissance_totale: tot, puissance_moy: rs.length ? Math.round(tot / rs.length) : 0,
+      actifs_24h: rs.filter((r) => Number(r.connexion_h) < 24).length,
+      inactifs_7j: rs.filter((r) => Number(r.connexion_h) >= 168).length};
+  })
+});
+
+dash.calc('dernier', {
+  title: 'Dernier relevé et écart',
+  description: 'Chiffres du dernier relevé et écart avec le relevé précédent (vide s\'il n\'y en a qu\'un).',
+  inputs: ['synthese'],
+  fn: (synthese) => {
+    const d = synthese[synthese.length - 1], p = synthese[synthese.length - 2];
+    if (!d) return [];
+    const ec = (f) => p ? d[f] - p[f] : null;
+    return [{...d, d_membres: ec('membres'), d_puissance: ec('puissance_totale'), d_moy: ec('puissance_moy'), d_actifs: ec('actifs_24h'), d_inactifs: ec('inactifs_7j')}];
+  }
+});
+
+dash.calc('membres', {
+  title: 'Membres au dernier relevé',
+  description: 'Chaque membre du dernier relevé, avec sa variation de puissance depuis le relevé précédent et un statut selon sa dernière connexion.',
+  inputs: ['releves', 'instantanes'],
+  fn: (releves, instantanes) => {
+    const cle = (r) => r.date + '|' + r.releve + '|' + (r.evenement || '');
+    const d = instantanes[instantanes.length - 1], p = instantanes[instantanes.length - 2];
+    if (!d) return [];
+    const prec = new Map(p ? releves.filter((r) => cle(r) === p.cle).map((r) => [r.membre, Number(r.puissance)]) : []);
+    return releves.filter((r) => cle(r) === d.cle).map((r) => {
+      const h = Number(r.connexion_h);
+      return {membre: r.membre, rang: r.rang, puissance: Number(r.puissance),
+        variation: prec.has(r.membre) ? Number(r.puissance) - prec.get(r.membre) : null,
+        niveau: Number(r.niveau), connexion_h: h,
+        statut: h >= 168 ? 'Absent' : h >= 72 ? 'À surveiller' : 'Actif'};
+    });
+  }
+});
+
+dash.calc('rangs', {
+  title: 'Membres par rang',
+  description: 'Nombre de membres et puissance cumulée par rang au dernier relevé.',
+  inputs: ['membres'],
+  fn: (membres) => ['R5', 'R4', 'R3', 'R2', 'R1'].map((rang) => {
+    const rs = membres.filter((m) => m.rang === rang);
+    return {rang, valeur: rs.length, puissance: rs.reduce((a, m) => a + m.puissance, 0)};
+  })
+});
+
+dash.calc('activite', {
+  title: 'Dernière connexion',
+  description: 'Membres par ancienneté de dernière connexion au dernier relevé.',
+  inputs: ['membres'],
+  fn: (membres) => [['Moins de 24 h', 0, 24], ['1 à 3 jours', 24, 72], ['3 à 7 jours', 72, 168], ['7 à 30 jours', 168, 720], ['Plus de 30 jours', 720, Infinity]]
+    .map(([tranche, a, b]) => ({tranche, valeur: membres.filter((m) => m.connexion_h >= a && m.connexion_h < b).length}))
+});
+
+dash.calc('mouvements', {
+  title: 'Arrivées et départs',
+  description: 'Membres présents dans un seul des deux derniers relevés.',
+  inputs: ['releves', 'instantanes'],
+  fn: (releves, instantanes) => {
+    const cle = (r) => r.date + '|' + r.releve + '|' + (r.evenement || '');
+    const d = instantanes[instantanes.length - 1], p = instantanes[instantanes.length - 2];
+    if (!d || !p) return [];
+    const now = releves.filter((r) => cle(r) === d.cle), before = releves.filter((r) => cle(r) === p.cle);
+    const nNow = new Set(now.map((r) => r.membre)), nBefore = new Set(before.map((r) => r.membre));
+    return [...now.filter((r) => !nBefore.has(r.membre)).map((r) => ({mouvement: 'Arrivée', membre: r.membre, rang: r.rang, puissance: Number(r.puissance)})),
+            ...before.filter((r) => !nNow.has(r.membre)).map((r) => ({mouvement: 'Départ', membre: r.membre, rang: r.rang, puissance: Number(r.puissance)}))];
+  }
+});
+
+dash.calc('evenements', {
+  title: 'Gains par événement',
+  description: 'Pour chaque événement ayant un relevé « Avant » et un relevé « Après », le gain de puissance de chaque membre présent aux deux.',
+  inputs: ['releves'],
+  fn: (releves) => {
+    const evs = [...new Set(releves.filter((r) => r.evenement).map((r) => r.evenement))];
+    const out = [];
+    for (const ev of evs) {
+      const av = new Map(releves.filter((r) => r.evenement === ev && r.releve === 'Avant').map((r) => [r.membre, Number(r.puissance)]));
+      for (const r of releves.filter((x) => x.evenement === ev && x.releve === 'Après')) {
+        if (av.has(r.membre)) out.push({evenement: ev, membre: r.membre, avant: av.get(r.membre), apres: Number(r.puissance), gain: Number(r.puissance) - av.get(r.membre)});
+      }
+    }
+    return out.sort((a, b) => b.gain - a.gain);
+  }
+});
+
+window.rfg = (() => {
+  const fr = d3.formatLocale({decimal: ',', thousands: ' ', grouping: [3], currency: ['', ' €']});
+  const int = fr.format(',d');
+  const m1 = fr.format(',.1f');
+  const md = fr.format(',.2f');
+  const fmt = (v, f) => v == null || isNaN(v) ? '—' :
+    f === 'md' ? md(v / 1e9) + ' Md' : f === 'm' ? m1(v / 1e6) + ' M' : int(v);
+  const signed = (v, f) => (v > 0 ? '+' : v < 0 ? '−' : '±') + fmt(Math.abs(v), f);
+  const dateFr = (s) => { const d = new Date(s + 'T00:00:00Z'); return isNaN(d) ? s : d.toLocaleDateString('fr-FR', {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'}); };
+  const depuis = (h) => h === 0 ? 'En ligne' : h < 1 ? Math.round(h * 60) + ' min' : h < 24 ? Math.round(h) + ' h' : h < 720 ? Math.round(h / 24) + ' j' : '1 mois et +';
+  return {fmt, signed, dateFr, depuis, sort: {col: 'puissance', dir: -1}};
+})();
+
+const rfgFail = (el) => {
+  el.replaceChildren();
+  const s = document.createElement('span');
+  s.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:.4rem;min-height:inherit;color:#9fb6d6;font-size:var(--cds-font-size-caption)';
+  const dot = document.createElement('i');
+  dot.style.cssText = 'width:.375rem;height:.375rem;border-radius:50%;background:var(--color-bad)';
+  s.append(dot, document.createTextNode('Échec du chargement'));
+  el.append(s);
+};
+
+dash.draw('kpi', (el) => {
+  const g = dash.data('dernier');
+  const v = g.status === 'ok' && g.data[0] ? g.data[0][el.dataset.field] : null;
+  el.classList.toggle('dash-skeleton', g.status === 'loading');
+  el.textContent = v == null ? '—' : rfg.fmt(v, el.dataset.fmt);
+});
+
+dash.draw('dernier-date', (el) => {
+  const g = dash.data('dernier');
+  el.textContent = g.status === 'ok' && g.data[0] ? rfg.dateFr(g.data[0].date) : '—';
+});
+
+dash.draw('delta', (el) => {
+  const g = dash.data('dernier');
+  el.classList.remove('up', 'down');
+  if (g.status !== 'ok' || !g.data[0]) { el.textContent = '—'; return; }
+  const v = g.data[0][el.dataset.field];
+  if (v == null) { el.textContent = 'Premier relevé'; return; }
+  const good = el.dataset.inverse ? v < 0 : v > 0, bad = el.dataset.inverse ? v > 0 : v < 0;
+  if (good) el.classList.add('up'); if (bad) el.classList.add('down');
+  el.textContent = rfg.signed(v, el.dataset.fmt) + ' depuis le relevé précédent';
+});
+
+dash.draw('serie', (el) => {
+  const g = dash.data('synthese');
+  el.replaceChildren();
+  el.classList.toggle('dash-skeleton', g.status === 'loading');
+  if (g.status === 'error') return rfgFail(el);
+  if (g.status !== 'ok') return;
+  const rows = g.data, f = el.dataset.field, fm = el.dataset.fmt;
+  const W = Math.max(240, el.clientWidth), H = 180, ml = 8, mr = 8, mt = 24, mb = 28;
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).style('display', 'block');
+  const lab = (r) => rfg.dateFr(r.date) + (r.releve !== 'Hebdo' ? ' · ' + r.releve + ' ' + r.evenement : '');
+  const x = d3.scalePoint(rows.map((r) => r.cle), [ml + 40, W - mr - 40]).padding(rows.length === 1 ? 0.5 : 0);
+  const ext = d3.extent(rows, (r) => r[f]);
+  const pad = (ext[1] - ext[0]) * 0.15 || Math.abs(ext[1]) * 0.1 || 1;
+  const y = d3.scaleLinear([ext[0] - pad, ext[1] + pad], [H - mb, mt]);
+  svg.append('line').attr('x1', ml).attr('x2', W - mr).attr('y1', H - mb).attr('y2', H - mb).style('stroke', RFG_C.axe);
+  const gid = 'g' + Math.random().toString(36).slice(2);
+  const gr = svg.append('defs').append('linearGradient').attr('id', gid).attr('x1', 0).attr('x2', 0).attr('y1', 0).attr('y2', 1);
+  [[0, .35], [.5, .12], [1, 0]].forEach(([o, a]) => gr.append('stop').attr('offset', o).style('stop-color', RFG_C.or).style('stop-opacity', a));
+  if (rows.length > 1) svg.append('path').datum(rows).style('fill', `url(#${gid})`).attr('d', d3.area((r) => x(r.cle), H - mb, (r) => y(r[f])));
+  if (rows.length > 1) svg.append('path').datum(rows).attr('fill', 'none').style('stroke', RFG_C.or).attr('stroke-width', 2.5)
+    .attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round').attr('d', d3.line((r) => x(r.cle), (r) => y(r[f])));
+  svg.selectAll('circle').data(rows).join('circle').attr('cx', (r) => x(r.cle)).attr('cy', (r) => y(r[f])).attr('r', 5).style('fill', RFG_C.or).style('stroke', RFG_C.nuit).attr('stroke-width', 2);
+  const last = rows[rows.length - 1];
+  svg.append('text').attr('x', x(last.cle)).attr('y', y(last[f]) - 10).attr('text-anchor', rows.length > 1 ? 'end' : 'middle')
+    .style('fill', RFG_C.or).style('font-size', 'var(--cds-font-size-body)').style('font-weight', 600).text(rfg.fmt(last[f], fm));
+  const ticks = rows.length <= 6 ? rows : [rows[0], rows[rows.length - 1]];
+  svg.selectAll('text.t').data(ticks).join('text').attr('class', 't').attr('x', (r) => x(r.cle)).attr('y', H - 8)
+    .attr('text-anchor', (r, i) => rows.length === 1 ? 'middle' : i === 0 ? 'start' : i === ticks.length - 1 ? 'end' : 'middle')
+    .style('fill', RFG_C.muet).style('font-size', 'var(--cds-font-size-caption)').text((r) => rfg.dateFr(r.date));
+  const tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; el.append(tip);
+  svg.on('pointermove', (ev) => {
+    const [px] = d3.pointer(ev);
+    const r = rows.reduce((a, b) => Math.abs(x(b.cle) - px) < Math.abs(x(a.cle) - px) ? b : a);
+    const t = document.createElement('div'); t.className = 't'; t.textContent = lab(r);
+    const v = document.createElement('div'); v.textContent = rfg.fmt(r[f], fm);
+    tip.replaceChildren(t, v); tip.hidden = false;
+    const k = el.clientWidth / W;
+    tip.style.left = Math.min(Math.max(0, x(r.cle) * k - tip.offsetWidth / 2), el.clientWidth - tip.offsetWidth) + 'px';
+    tip.style.top = Math.max(0, y(r[f]) * k - tip.offsetHeight - 10) + 'px';
+  }).on('pointerleave', () => { tip.hidden = true; });
+});
+
+dash.draw('barres', (el) => {
+  const id = el.dataset.source, g = dash.data(id), lk = el.dataset.label;
+  el.replaceChildren();
+  el.classList.toggle('dash-skeleton', g.status === 'loading');
+  if (g.status === 'error') return rfgFail(el);
+  if (g.status !== 'ok') return;
+  const rows = g.data, W = Math.max(240, el.clientWidth), bh = 22, gap = 10, H = rows.length * (bh + gap);
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).style('display', 'block');
+  const labels = svg.selectAll('text.l').data(rows).join('text').attr('class', 'l').attr('x', 0).attr('y', (r, i) => i * (bh + gap) + bh / 2 + 4)
+    .style('fill', RFG_C.texte).style('font-size', 'var(--cds-font-size-caption)').text((r) => r[lk]);
+  const lw = d3.max(labels.nodes(), (n) => n.getComputedTextLength()) + 10;
+  const extra = (r) => int(r.valeur) + (r.puissance != null ? ' · ' + rfg.fmt(r.puissance, 'm') : '');
+  const int = (v) => rfg.fmt(v, 'int');
+  const vals = svg.selectAll('text.v').data(rows).join('text').attr('class', 'v').attr('y', (r, i) => i * (bh + gap) + bh / 2 + 4)
+    .style('fill', RFG_C.muet).style('font-size', 'var(--cds-font-size-caption)').style('font-variant-numeric', 'tabular-nums').text(extra);
+  const vw = d3.max(vals.nodes(), (n) => n.getComputedTextLength()) + 8;
+  const x = d3.scaleLinear([0, d3.max(rows, (r) => r.valeur) || 1], [0, Math.max(10, W - lw - vw)]);
+  const bid = 'b' + Math.random().toString(36).slice(2);
+  const bg = svg.append('defs').append('linearGradient').attr('id', bid);
+  bg.append('stop').attr('offset', 0).style('stop-color', RFG_C.violet);
+  bg.append('stop').attr('offset', 1).style('stop-color', RFG_C.violetClair);
+  svg.selectAll('rect').data(rows).join('rect').attr('x', lw).attr('y', (r, i) => i * (bh + gap)).attr('height', bh)
+    .attr('width', (r) => Math.max(1, x(r.valeur))).attr('rx', 4).style('fill', `url(#${bid})`);
+  vals.attr('x', (r) => lw + Math.max(1, x(r.valeur)) + 6);
+});
+
+const rfgCell = (tr, text, cls) => { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = text; tr.append(td); return td; };
+
+dash.draw('table', (tb) => {
+  const g = dash.data('membres');
+  tb.replaceChildren();
+  if (g.status !== 'ok') return;
+  const q = (document.querySelector('.rfg-search')?.value || '').toLowerCase();
+  const st = document.querySelector('.rfg-filtre')?.value || '';
+  const {col, dir} = rfg.sort;
+  const rows = g.data.filter((r) => (!q || r.membre.toLowerCase().includes(q)) && (!st || r.statut === st))
+    .sort((a, b) => {
+      const va = a[col], vb = b[col];
+      if (va == null && vb == null) return 0; if (va == null) return 1; if (vb == null) return -1;
+      return (typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb), 'fr')) * dir;
+    });
+  for (const r of rows) {
+    const tr = document.createElement('tr');
+    rfgCell(tr, r.membre); rfgCell(tr, r.rang); rfgCell(tr, rfg.fmt(r.puissance, 'm'), 'num');
+    const v = rfgCell(tr, r.variation == null ? '—' : rfg.signed(r.variation, 'm'), 'num');
+    if (r.variation > 0) v.className = 'num up'; else if (r.variation < 0) v.className = 'num down';
+    rfgCell(tr, rfg.fmt(r.niveau, 'int'), 'num hide-n'); rfgCell(tr, rfg.depuis(r.connexion_h), 'hide-n');
+    const td = rfgCell(tr, ''); const p = document.createElement('span');
+    p.className = 'pill ' + (r.statut === 'Absent' ? 'bad' : r.statut === 'À surveiller' ? 'warn' : 'ok'); p.textContent = r.statut; td.append(p);
+    tb.append(tr);
+  }
+});
+
+dash.draw('mouv', (tb) => {
+  const g = dash.data('mouvements');
+  tb.replaceChildren();
+  if (g.status !== 'ok') return;
+  for (const r of g.data) { const tr = document.createElement('tr'); rfgCell(tr, r.mouvement).className = r.mouvement === 'Arrivée' ? 'up' : 'down'; rfgCell(tr, r.membre); rfgCell(tr, r.rang); rfgCell(tr, rfg.fmt(r.puissance, 'm'), 'num'); tb.append(tr); }
+});
+
+dash.draw('events', (tb) => {
+  const g = dash.data('evenements');
+  tb.replaceChildren();
+  if (g.status !== 'ok') return;
+  for (const r of g.data) { const tr = document.createElement('tr'); rfgCell(tr, r.evenement); rfgCell(tr, r.membre); rfgCell(tr, rfg.fmt(r.avant, 'm'), 'num'); rfgCell(tr, rfg.fmt(r.apres, 'm'), 'num'); rfgCell(tr, rfg.signed(r.gain, 'm'), 'num ' + (r.gain >= 0 ? 'up' : 'down')); tb.append(tr); }
+});
+
+dash.onData(() => {
+  for (const id of ['mouvements', 'evenements']) {
+    const g = dash.data(id);
+    document.querySelectorAll(`[data-empty="${id}"]`).forEach((n) => { n.hidden = !(g.status === 'ok' && g.data.length === 0); });
+  }
+});
+
+document.querySelectorAll('.rfg-search, .rfg-filtre').forEach((n) => n.addEventListener('input', () => dash.draw('table')));
+document.querySelectorAll('.rfg th button[data-sort]').forEach((b) => b.addEventListener('click', () => {
+  const col = b.dataset.sort;
+  rfg.sort = {col, dir: rfg.sort.col === col ? -rfg.sort.dir : (col === 'membre' || col === 'rang' || col === 'statut' ? 1 : -1)};
+  document.querySelectorAll('.rfg th[data-field]').forEach((th) => th.removeAttribute('aria-sort'));
+  b.closest('th').setAttribute('aria-sort', rfg.sort.dir === 1 ? 'ascending' : 'descending');
+  dash.draw('table');
+}));
+</script>
+
+</div>
+</body>
+</html>
