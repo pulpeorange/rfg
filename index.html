@@ -38,7 +38,7 @@ window.dash = (() => {
   };
   window.addEventListener('DOMContentLoaded', () => {
     all();
-    const files = {releves: 'data/releves.json', evenements: 'data/evenements.json', ev_resume: 'data/evenements_resume.json'};
+    const files = {releves: 'data/releves.json', evenements: 'data/evenements.json', ev_resume: 'data/evenements_resume.json', territoires: 'data/territoires.json'};
     Promise.all(Object.entries(files).map(([id, f]) => fetch(f, {cache: 'no-store'}).then((r) => r.json()).then((j) => { store[id] = j.rows || j; }))).then(() => {
       for (const c of calcs) store[c.id] = c.fn(...c.inputs.map((i) => store[i] || []));
       state = 'ok'; all();
@@ -138,6 +138,11 @@ window.dash = (() => {
   .rfg h3 { font-size: var(--cds-font-size-body); margin: 0 0 8px; color: var(--or-pale); font-weight: 600; }
   .rfg .vide { color: var(--muet); font-size: var(--cds-font-size-caption); }
   .rfg .vic { color: var(--ok); } .rfg .def { color: var(--bad); }
+  .rfg .carte { min-height: 260px; }
+  .rfg .carte svg text { pointer-events: none; }
+  .rfg .legende { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 8px; font-size: var(--cds-font-size-caption); color: var(--muet); }
+  .rfg .legende i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+  .rfg h3.sous { margin-top: var(--cds-gap-lg); }
   .rfg .pied { text-align: center; color: var(--muet); font-size: var(--cds-font-size-caption); margin: 0; }
   @media (max-width: 640px) { .rfg .hide-n { display: none; } }
   [data-dash-source-state=empty] { color: transparent; }
@@ -244,6 +249,26 @@ window.dash = (() => {
       </tr></thead>
       <tbody data-draw="table"></tbody>
     </table></div>
+  </section>
+
+
+  <section class="card">
+    <h2 class="ancre" id="territoires">Carte des territoires</h2>
+    <p class="note">Zone maritime #17 · relevé du <b data-draw="val" data-source="terr_resume" data-field="date" data-row="0" data-fmt="date">—</b>. Chaque point est un territoire, placé comme sur la carte du jeu ; sa taille indique le niveau.</p>
+    <div class="ev-tete">
+      <div class="card"><span class="kpi-l">Territoires</span><span class="kpi-v" data-draw="val" data-source="terr_resume" data-field="total" data-row="0" data-fmt="int">—</span><span class="kpi-d">sur la zone</span></div>
+      <div class="card"><span class="kpi-l">Le Refuge</span><span class="kpi-v" data-draw="val" data-source="terr_resume" data-field="rfg" data-row="0" data-fmt="int">—</span><span class="kpi-d">territoire(s) tenu(s)</span></div>
+      <div class="card"><span class="kpi-l">Alliés</span><span class="kpi-v" data-draw="val" data-source="terr_resume" data-field="allies" data-row="0" data-fmt="int">—</span><span class="kpi-d">1MP, ELF, AFR, Pos, RTD</span></div>
+      <div class="card"><span class="kpi-l">Autres alliances</span><span class="kpi-v" data-draw="val" data-source="terr_resume" data-field="autres" data-row="0" data-fmt="int">—</span><span class="kpi-d">territoires</span></div>
+      <div class="card"><span class="kpi-l">Libres</span><span class="kpi-v" data-draw="val" data-source="terr_resume" data-field="libres" data-row="0" data-fmt="int">—</span><span class="kpi-d">sans alliance</span></div>
+    </div>
+    <div class="deux">
+      <div><h3>Carte de la zone</h3><div class="chart carte" data-draw="carte" data-source="territoires"></div></div>
+      <div><h3>Territoires par alliance</h3><div class="chart" data-draw="terr-barres" data-source="terr_alliances"></div></div>
+    </div>
+    <h3 class="sous">Évolution du nombre de territoires</h3>
+    <p class="note" data-empty="terr_evol" hidden>La courbe apparaîtra dès le deuxième relevé de la carte.</p>
+    <div class="chart" data-draw="terr-evol" data-source="terr_evol" data-evol hidden></div>
   </section>
 
   <section class="card">
@@ -620,7 +645,156 @@ dash.draw('oasis', (el) => {
   el.append(deux);
 });
 
+dash.calc('terr_dernier', {
+  title: 'Territoires au dernier relevé',
+  description: 'Les territoires de la zone #17 lors du relevé de carte le plus récent.',
+  inputs: ['territoires'],
+  fn: (territoires) => { const d = territoires.reduce((m, r) => r.date > m ? r.date : m, ''); return territoires.filter((r) => r.date === d); }
+});
+dash.calc('terr_resume', {
+  title: 'Synthèse des territoires',
+  description: 'Nombre de territoires au dernier relevé : total, Le Refuge, alliés, autres alliances, libres.',
+  inputs: ['terr_dernier'],
+  fn: (terr_dernier) => terr_dernier.length ? [{
+    date: terr_dernier[0].date, total: terr_dernier.filter((r) => r.type !== 'Arche Suprême').length,
+    rfg: terr_dernier.filter((r) => r.statut === 'Le Refuge').length,
+    allies: terr_dernier.filter((r) => r.statut === 'Allié').length,
+    autres: terr_dernier.filter((r) => r.statut === 'Autre alliance').length,
+    libres: terr_dernier.filter((r) => r.statut === 'Libre' && r.type !== 'Arche Suprême').length,
+    alliances: new Set(terr_dernier.filter((r) => r.statut !== 'Libre').map((r) => r.alliance)).size
+  }] : []
+});
+dash.calc('terr_alliances', {
+  title: 'Territoires par alliance',
+  description: 'Pour chaque alliance au dernier relevé : nombre de territoires et somme des niveaux.',
+  inputs: ['terr_dernier'],
+  fn: (terr_dernier) => {
+    const m = new Map();
+    for (const r of terr_dernier) {
+      if (r.type === 'Arche Suprême') continue;
+      const a = m.get(r.alliance) || {alliance: r.alliance, statut: r.statut, valeur: 0, niveaux: 0};
+      a.valeur += 1; a.niveaux += Number(r.niveau); m.set(r.alliance, a);
+    }
+    return [...m.values()].sort((a, b) => b.valeur - a.valeur || b.niveaux - a.niveaux);
+  }
+});
+dash.calc('terr_evol', {
+  title: 'Évolution des territoires',
+  description: 'Nombre de territoires par alliance à chaque relevé de carte.',
+  inputs: ['territoires'],
+  fn: (territoires) => {
+    const m = new Map();
+    for (const r of territoires) {
+      if (r.type === 'Arche Suprême' || r.statut === 'Libre') continue;
+      const k = r.date + '|' + r.alliance;
+      const a = m.get(k) || {date: r.date, alliance: r.alliance, statut: r.statut, valeur: 0};
+      a.valeur += 1; m.set(k, a);
+    }
+    return [...m.values()].sort((a, b) => a.date < b.date ? -1 : 1);
+  }
+});
+
+const RFG_TERR_COUL = ['#40a0ff', '#ff7a7a', '#5ee3a1', '#ffc857', '#a985ff', '#ff9f43', '#2ed1c4', '#e86fb0', '#9ad04b', '#7aa2ff', '#ff6b5e', '#c4a1ff', '#58c4ff', '#f7a8d8', '#b8e986', '#ffd6a5', '#8fd3c8', '#d0b38a'];
+const rfgCoul = (() => {
+  const cache = new Map();
+  return (a, statut) => {
+    if (statut === 'Le Refuge') return '#ff4fd8';
+    if (statut === 'Libre') return '#9fb6d6';
+    if (!cache.has(a)) cache.set(a, RFG_TERR_COUL[cache.size % RFG_TERR_COUL.length]);
+    return cache.get(a);
+  };
+})();
+
+dash.draw('val', (el) => {
+  const g = dash.data(el.dataset.source), row = Number(el.dataset.row || 0);
+  el.classList.toggle('dash-skeleton', g.status === 'loading');
+  const v = g.status === 'ok' && g.data[row] ? g.data[row][el.dataset.field] : null;
+  el.textContent = v == null ? '—' : el.dataset.fmt === 'date' ? rfg.dateFr(v) : rfg.fmt(v, el.dataset.fmt || 'int');
+});
+
+dash.draw('carte', (el) => {
+  const g = dash.data('territoires'), ga = dash.data('terr_alliances');
+  el.replaceChildren();
+  el.classList.toggle('dash-skeleton', g.status === 'loading');
+  if (g.status === 'error') return rfgFail(el);
+  if (g.status !== 'ok') return;
+  const d = g.data.reduce((m, r) => r.date > m ? r.date : m, '');
+  const rows = g.data.filter((r) => r.date === d);
+  (ga.status === 'ok' ? ga.data : []).forEach((a) => rfgCoul(a.alliance, a.statut));
+  const W = Math.max(260, el.clientWidth), xs = d3.extent(rows, (r) => r.x), ys = d3.extent(rows, (r) => r.y);
+  const pad = 18, H = Math.round((W - 2 * pad) * (ys[1] - ys[0]) / (xs[1] - xs[0]) + 2 * pad);
+  const x = d3.scaleLinear(xs, [pad, W - pad]), y = d3.scaleLinear(ys, [pad, H - pad]);
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).style('display', 'block');
+  svg.append('rect').attr('x', 2).attr('y', 2).attr('width', W - 4).attr('height', H - 4).attr('rx', 12).style('fill', 'rgba(8,23,51,.55)').style('stroke', 'rgba(242,201,76,.25)');
+  const r0 = Math.max(4, W / 70);
+  const g1 = svg.selectAll('g.t').data(rows).join('g').attr('class', 't').attr('transform', (r) => `translate(${x(r.x)},${y(r.y)})`);
+  g1.append('circle').attr('r', (r) => r0 * (0.75 + Number(r.niveau) * 0.18))
+    .style('fill', (r) => r.type === 'Arche Suprême' ? '#ffffff' : rfgCoul(r.alliance, r.statut))
+    .style('fill-opacity', (r) => r.type === 'Arche Suprême' ? 1 : r.statut === 'Libre' ? 0.35 : 0.9)
+    .style('stroke', (r) => r.statut === 'Le Refuge' ? '#fff' : r.statut === 'Allié' ? '#f2c94c' : 'rgba(0,0,0,.35)')
+    .attr('stroke-width', (r) => r.statut === 'Le Refuge' ? 3 : r.statut === 'Allié' ? 2 : 1);
+  if (W > 420) g1.filter((r) => r.statut !== 'Libre' || r.type === 'Arche Suprême').append('text').attr('y', (r) => -r0 * (0.75 + Number(r.niveau) * 0.18) - 3).attr('text-anchor', 'middle')
+    .style('fill', RFG_C.texte).style('font-size', '9px').style('opacity', .85).text((r) => r.type === 'Arche Suprême' ? 'Arche' : r.alliance);
+  const tip = rfgEl('div', 'tip'); tip.hidden = true; el.append(tip);
+  g1.on('pointerenter', (ev, r) => {
+    tip.replaceChildren(rfgEl('div', 't', r.type === 'Arche Suprême' ? 'Arche Suprême' : (r.statut === 'Libre' ? 'Libre' : '[' + r.alliance + ']') + ' · ' + r.statut), rfgEl('div', '', r.type + ' · niveau ' + r.niveau));
+    tip.hidden = false;
+    const k = el.clientWidth / W, px = x(r.x) * k, py = y(r.y) * k;
+    tip.style.left = Math.min(Math.max(0, px - tip.offsetWidth / 2), el.clientWidth - tip.offsetWidth) + 'px';
+    tip.style.top = Math.max(0, py - tip.offsetHeight - 14) + 'px';
+  }).on('pointerleave', () => { tip.hidden = true; });
+  const leg = rfgEl('div', 'legende');
+  const item = (c, t) => { const s = rfgEl('span'); const i = rfgEl('i'); i.style.background = c; s.append(i, document.createTextNode(t)); leg.append(s); };
+  item('#ff4fd8', 'Le Refuge'); item('#f2c94c', 'Contour doré : allié'); item('#9fb6d6', 'Libre'); item('#ffffff', 'Arche Suprême');
+  el.append(leg);
+});
+
+dash.draw('terr-barres', (el) => {
+  const g = dash.data('terr_alliances');
+  el.replaceChildren();
+  el.classList.toggle('dash-skeleton', g.status === 'loading');
+  if (g.status === 'error') return rfgFail(el);
+  if (g.status !== 'ok') return;
+  const rows = g.data, W = Math.max(240, el.clientWidth), bh = 18, gap = 8, H = rows.length * (bh + gap);
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).style('display', 'block');
+  const lab = (r) => (r.statut === 'Le Refuge' ? '★ ' : r.statut === 'Allié' ? '◆ ' : '') + r.alliance;
+  const labels = svg.selectAll('text.l').data(rows).join('text').attr('class', 'l').attr('x', 0).attr('y', (r, i) => i * (bh + gap) + bh / 2 + 4)
+    .style('fill', (r) => r.statut === 'Le Refuge' ? '#ff4fd8' : r.statut === 'Allié' ? RFG_C.or : RFG_C.texte).style('font-size', 'var(--cds-font-size-caption)').text(lab);
+  const lw = d3.max(labels.nodes(), (n) => n.getComputedTextLength()) + 10;
+  const vals = svg.selectAll('text.v').data(rows).join('text').attr('class', 'v').attr('y', (r, i) => i * (bh + gap) + bh / 2 + 4)
+    .style('fill', RFG_C.muet).style('font-size', 'var(--cds-font-size-caption)').style('font-variant-numeric', 'tabular-nums').text((r) => r.valeur + ' · niv. ' + r.niveaux);
+  const vw = d3.max(vals.nodes(), (n) => n.getComputedTextLength()) + 8;
+  const x = d3.scaleLinear([0, d3.max(rows, (r) => r.valeur) || 1], [0, Math.max(10, W - lw - vw)]);
+  svg.selectAll('rect').data(rows).join('rect').attr('x', lw).attr('y', (r, i) => i * (bh + gap)).attr('height', bh).attr('rx', 4)
+    .attr('width', (r) => Math.max(2, x(r.valeur))).style('fill', (r) => rfgCoul(r.alliance, r.statut));
+  vals.attr('x', (r) => lw + Math.max(2, x(r.valeur)) + 6);
+});
+
+dash.draw('terr-evol', (el) => {
+  const g = dash.data('terr_evol');
+  el.replaceChildren();
+  el.classList.toggle('dash-skeleton', g.status === 'loading');
+  if (g.status === 'error') return rfgFail(el);
+  if (g.status !== 'ok') return;
+  const dates = [...new Set(g.data.map((r) => r.date))].sort();
+  if (dates.length < 2) return;
+  const series = d3.groups(g.data, (r) => r.alliance);
+  const W = Math.max(260, el.clientWidth), H = 220, ml = 28, mr = 60, mt = 10, mb = 24;
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).style('display', 'block');
+  const x = d3.scalePoint(dates, [ml, W - mr]), y = d3.scaleLinear([0, d3.max(g.data, (r) => r.valeur) + 1], [H - mb, mt]);
+  svg.selectAll('text.t').data(dates).join('text').attr('class', 't').attr('x', (d) => x(d)).attr('y', H - 6).attr('text-anchor', 'middle').style('fill', RFG_C.muet).style('font-size', '10px').text((d) => rfg.dateFr(d));
+  for (const [a, rs] of series) {
+    const c = rfgCoul(a, rs[0].statut);
+    svg.append('path').datum(rs).style('fill', 'none').style('stroke', c).attr('stroke-width', rs[0].statut === 'Le Refuge' ? 3 : 1.5).attr('d', d3.line((r) => x(r.date), (r) => y(r.valeur)));
+    const l = rs[rs.length - 1];
+    svg.append('text').attr('x', x(l.date) + 6).attr('y', y(l.valeur) + 3).style('fill', c).style('font-size', '10px').text(a + ' ' + l.valeur);
+  }
+});
+
 dash.onData(() => {
+  const te = dash.data('terr_evol');
+  document.querySelectorAll('[data-empty="terr_evol"]').forEach((n) => { n.hidden = !(te.status === 'ok' && new Set(te.data.map((r) => r.date)).size < 2); });
+  document.querySelectorAll('[data-evol]').forEach((n) => { n.hidden = !(te.status === 'ok' && new Set(te.data.map((r) => r.date)).size >= 2); });
   for (const id of ['mouvements']) {
     const g = dash.data(id);
     document.querySelectorAll(`[data-empty="${id}"]`).forEach((n) => { n.hidden = !(g.status === 'ok' && g.data.length === 0); });
