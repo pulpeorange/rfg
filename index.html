@@ -38,8 +38,8 @@ window.dash = (() => {
   };
   window.addEventListener('DOMContentLoaded', () => {
     all();
-    fetch('data/releves.json', {cache: 'no-store'}).then((r) => r.json()).then((j) => {
-      store.releves = j.rows || j;
+    const files = {releves: 'data/releves.json', evenements: 'data/evenements.json', ev_resume: 'data/evenements_resume.json'};
+    Promise.all(Object.entries(files).map(([id, f]) => fetch(f, {cache: 'no-store'}).then((r) => r.json()).then((j) => { store[id] = j.rows || j; }))).then(() => {
       for (const c of calcs) store[c.id] = c.fn(...c.inputs.map((i) => store[i] || []));
       state = 'ok'; all();
     }).catch((e) => { console.error(e); state = 'error'; all(); });
@@ -124,6 +124,20 @@ window.dash = (() => {
   .rfg td.num, .rfg th.num { text-align: right; }
   .rfg .pill { font-size: var(--cds-font-size-caption); padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; }
   .rfg .pill.bad { color: var(--bad); } .rfg .pill.warn { color: var(--warn); } .rfg .pill.ok { color: var(--ok); }
+  .rfg .ev-vue { min-height: 120px; }
+  .rfg .ev-tete { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: var(--cds-gap-md); margin-bottom: var(--cds-gap-md); }
+  .rfg .ev-tete .card { padding: 14px 16px; }
+  .rfg .ev-tete .kpi-v { font-size: 1.6rem; }
+  .rfg .medaille { display: inline-flex; align-items: center; justify-content: center; width: 1.7em; height: 1.7em; border-radius: 50%; font-weight: 700; font-size: .85em; }
+  .rfg .m1 { background: linear-gradient(180deg, #f7e3a1, #c99a2e); color: #3a2a00; }
+  .rfg .m2 { background: linear-gradient(180deg, #eef3f8, #9fb0c4); color: #1c2a3a; }
+  .rfg .m3 { background: linear-gradient(180deg, #f2c1a0, #b06d3c); color: #3a1a06; }
+  .rfg .moi td { background: rgba(169, 133, 255, .12); }
+  .rfg .barre { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--violet), var(--violet-clair)); }
+  .rfg .deux { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: var(--cds-gap-md); }
+  .rfg h3 { font-size: var(--cds-font-size-body); margin: 0 0 8px; color: var(--or-pale); font-weight: 600; }
+  .rfg .vide { color: var(--muet); font-size: var(--cds-font-size-caption); }
+  .rfg .vic { color: var(--ok); } .rfg .def { color: var(--bad); }
   .rfg .pied { text-align: center; color: var(--muet); font-size: var(--cds-font-size-caption); margin: 0; }
   @media (max-width: 640px) { .rfg .hide-n { display: none; } }
   [data-dash-source-state=empty] { color: transparent; }
@@ -233,13 +247,16 @@ window.dash = (() => {
   </section>
 
   <section class="card">
-    <h2 class="ancre" id="evenements">Événements</h2>
-    <p class="note">Gain de puissance par membre entre le relevé « avant » et le relevé « après » de chaque événement.</p>
-    <p class="note" data-empty="evenements" hidden>Aucun événement relevé pour l'instant.</p>
-    <div class="tbox"><table data-source="evenements" data-row-key="evenement,membre">
-      <thead><tr><th data-field="evenement">Événement</th><th data-field="membre">Membre</th><th class="num" data-field="avant">Avant</th><th class="num" data-field="apres">Après</th><th class="num" data-field="gain">Gain</th></tr></thead>
-      <tbody data-draw="events"></tbody>
-    </table></div>
+    <h2 class="ancre" id="evenements">Classements des événements</h2>
+    <p class="note">Classements officiels lus dans le courrier d'alliance du jeu (Piège Léviathan, Guerre d'Oasis).</p>
+    <div class="tools"><select class="rfg-ev-choix" aria-label="Choisir un événement" data-draw="ev-choix" data-source="ev_resume"></select></div>
+    <div class="ev-vue" data-draw="ev-vue" data-source="ev_resume evenements membres"></div>
+  </section>
+
+  <section class="card">
+    <h2 class="ancre" id="oasis">Guerre d'Oasis : inscrits et participants</h2>
+    <p class="note">Comparaison entre la liste des inscrits (courrier « Inscriptions clôturées ») et les membres ayant marqué des points d'Oasis pendant la bataille.</p>
+    <div class="ev-vue" data-draw="oasis" data-source="oasis_ecart ev_resume membres"></div>
   </section>
   <p class="pied">Relevé automatique chaque jour à 17h · Données lues dans l'écran Membres de l'alliance · Puissances arrondies à 0,1 M</p>
 </div>
@@ -340,22 +357,6 @@ dash.calc('mouvements', {
   }
 });
 
-dash.calc('evenements', {
-  title: 'Gains par événement',
-  description: 'Pour chaque événement ayant un relevé « Avant » et un relevé « Après », le gain de puissance de chaque membre présent aux deux.',
-  inputs: ['releves'],
-  fn: (releves) => {
-    const evs = [...new Set(releves.filter((r) => r.evenement).map((r) => r.evenement))];
-    const out = [];
-    for (const ev of evs) {
-      const av = new Map(releves.filter((r) => r.evenement === ev && r.releve === 'Avant').map((r) => [r.membre, Number(r.puissance)]));
-      for (const r of releves.filter((x) => x.evenement === ev && x.releve === 'Après')) {
-        if (av.has(r.membre)) out.push({evenement: ev, membre: r.membre, avant: av.get(r.membre), apres: Number(r.puissance), gain: Number(r.puissance) - av.get(r.membre)});
-      }
-    }
-    return out.sort((a, b) => b.gain - a.gain);
-  }
-});
 
 window.rfg = (() => {
   const fr = d3.formatLocale({decimal: ',', thousands: ' ', grouping: [3], currency: ['', ' €']});
@@ -505,15 +506,122 @@ dash.draw('mouv', (tb) => {
   for (const r of g.data) { const tr = document.createElement('tr'); rfgCell(tr, r.mouvement).className = r.mouvement === 'Arrivée' ? 'up' : 'down'; rfgCell(tr, r.membre); rfgCell(tr, r.rang); rfgCell(tr, rfg.fmt(r.puissance, 'm'), 'num'); tb.append(tr); }
 });
 
-dash.draw('events', (tb) => {
-  const g = dash.data('evenements');
-  tb.replaceChildren();
-  if (g.status !== 'ok') return;
-  for (const r of g.data) { const tr = document.createElement('tr'); rfgCell(tr, r.evenement); rfgCell(tr, r.membre); rfgCell(tr, rfg.fmt(r.avant, 'm'), 'num'); rfgCell(tr, rfg.fmt(r.apres, 'm'), 'num'); rfgCell(tr, rfg.signed(r.gain, 'm'), 'num ' + (r.gain >= 0 ? 'up' : 'down')); tb.append(tr); }
+
+dash.calc('oasis_ecart', {
+  title: "Guerre d'Oasis : inscrits et participants",
+  description: "Pour chaque Guerre d'Oasis, chaque membre inscrit ou ayant marqué des points, avec son statut : présent, inscrit absent, ou présent sans inscription.",
+  inputs: ['evenements'],
+  fn: (evenements) => evenements.filter((r) => r.type === "Guerre d'Oasis").map((r) => ({
+    evenement: r.evenement, membre: r.membre, classement: r.classement, score: Number(r.score) || 0,
+    statut: r.inscrit && r.participe ? 'Inscrit et présent' : r.inscrit ? 'Inscrit absent' : 'Présent sans inscription'
+  }))
+});
+
+window.rfgEv = {choix: null};
+const rfgEvChoisi = (res) => {
+  const tri = [...res].sort((a, b) => a.date < b.date ? 1 : -1);
+  return res.find((r) => r.evenement === rfgEv.choix) || tri[0];
+};
+const rfgEl = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+const rfgTuile = (label, val, sous) => { const c = rfgEl('div', 'card'); c.append(rfgEl('span', 'kpi-l', label), rfgEl('span', 'kpi-v', val)); if (sous) c.append(rfgEl('span', 'kpi-d', sous)); return c; };
+const rfgNb = (v) => rfg.fmt(v, 'int');
+
+dash.draw('ev-choix', (sel) => {
+  const g = dash.data('ev_resume');
+  const res = g.status === 'ok' ? [...g.data].sort((a, b) => a.date < b.date ? 1 : -1) : [];
+  sel.replaceChildren(...res.map((r) => new Option(r.titre, r.evenement)));
+  const c = res.length ? rfgEvChoisi(res) : null;
+  if (c) sel.value = c.evenement;
+  sel.onchange = () => { rfgEv.choix = sel.value; dash.draw('ev-vue'); dash.draw('oasis'); };
+});
+
+dash.draw('ev-vue', (el) => {
+  const gr = dash.data('ev_resume'), ge = dash.data('evenements'), gm = dash.data('membres');
+  el.replaceChildren();
+  el.classList.toggle('dash-skeleton', gr.status === 'loading' || ge.status === 'loading');
+  if (gr.status === 'error' || ge.status === 'error') return rfgFail(el);
+  if (gr.status !== 'ok' || ge.status !== 'ok' || !gr.data.length) return;
+  const ev = rfgEvChoisi(gr.data);
+  const rows = ge.data.filter((r) => r.evenement === ev.evenement && r.participe).sort((a, b) => a.classement - b.classement);
+  const mem = new Map((gm.status === 'ok' ? gm.data : []).map((m) => [m.membre, m]));
+  const tete = rfgEl('div', 'ev-tete');
+  tete.append(rfgTuile('Date', rfg.dateFr(ev.date)));
+  tete.append(rfgTuile(ev.unite + ' (alliance)', rfgNb(ev.total)));
+  const nbMem = mem.size || null;
+  tete.append(rfgTuile('Participants', rfgNb(ev.participants), ev.inscrits ? 'sur ' + ev.inscrits + ' inscrits' : nbMem ? Math.round(ev.participants / nbMem * 100) + ' % des ' + nbMem + ' membres actuels' : null));
+  if (ev.resultat) {
+    const t = rfgTuile('Résultat', ev.resultat, 'contre ' + ev.adversaire + ' · ' + rfgNb(ev.score_alliance) + ' à ' + rfgNb(ev.score_adverse) + (ev.palier ? ' · palier ' + ev.palier : ''));
+    t.querySelector('.kpi-v').classList.add(ev.resultat === 'Victoire' ? 'vic' : 'def');
+    tete.append(t);
+  }
+  if (rows[0]) tete.append(rfgTuile('Meilleur score', rows[0].membre, rfgNb(rows[0].score)));
+  el.append(tete);
+  const box = rfgEl('div', 'tbox'), t = rfgEl('table'), th = rfgEl('thead'), hr = rfgEl('tr');
+  [['Rang', ''], ['Membre', ''], [ev.unite, 'num'], ['', 'hide-n'], ['Rang alliance', 'hide-n'], ['Puissance actuelle', 'num hide-n']].forEach(([h, c]) => hr.append(rfgEl('th', c, h)));
+  th.append(hr); t.append(th);
+  const tb = rfgEl('tbody'), max = rows.length ? rows[0].score : 1;
+  for (const r of rows) {
+    const tr = rfgEl('tr'), m = mem.get(r.membre);
+    if (r.membre === 'Pulpeorange') tr.className = 'moi';
+    const c0 = rfgEl('td'); c0.append(rfgEl('span', 'medaille' + (r.classement <= 3 ? ' m' + r.classement : ''), String(r.classement))); tr.append(c0);
+    tr.append(rfgEl('td', '', r.membre + (m ? '' : ' (a quitté l’alliance)')));
+    tr.append(rfgEl('td', 'num', rfgNb(r.score)));
+    const cb = rfgEl('td', 'hide-n'); const b = rfgEl('div', 'barre'); b.style.width = Math.max(2, r.score / max * 100) + '%'; b.style.minWidth = '2px'; cb.style.width = '22%'; cb.append(b); tr.append(cb);
+    tr.append(rfgEl('td', 'hide-n', m ? m.rang : '—'));
+    tr.append(rfgEl('td', 'num hide-n', m ? rfg.fmt(m.puissance, 'm') : '—'));
+    tb.append(tr);
+  }
+  t.append(tb); box.append(t); el.append(box);
+});
+
+dash.draw('oasis', (el) => {
+  const go = dash.data('oasis_ecart'), gr = dash.data('ev_resume'), gm = dash.data('membres');
+  el.replaceChildren();
+  el.classList.toggle('dash-skeleton', go.status === 'loading' || gr.status === 'loading');
+  if (go.status === 'error' || gr.status === 'error') return rfgFail(el);
+  if (go.status !== 'ok' || gr.status !== 'ok') return;
+  const oas = gr.data.filter((r) => r.type === "Guerre d'Oasis").sort((a, b) => a.date < b.date ? 1 : -1);
+  if (!oas.length) { el.append(rfgEl('p', 'vide', "Aucune Guerre d'Oasis relevée pour l'instant.")); return; }
+  const ev = oas.find((r) => r.evenement === rfgEv.choix) || oas[0];
+  const rows = go.data.filter((r) => r.evenement === ev.evenement);
+  const mem = new Map((gm.status === 'ok' ? gm.data : []).map((m) => [m.membre, m]));
+  const pres = rows.filter((r) => r.statut === 'Inscrit et présent'), abs = rows.filter((r) => r.statut === 'Inscrit absent'), hors = rows.filter((r) => r.statut === 'Présent sans inscription');
+  const ins = pres.length + abs.length;
+  el.append(rfgEl('p', 'note', ev.titre));
+  const tete = rfgEl('div', 'ev-tete');
+  tete.append(rfgTuile('Inscrits', rfgNb(ins)));
+  tete.append(rfgTuile('Ont participé', rfgNb(pres.length + hors.length), 'ont marqué des points'));
+  const taux = rfgTuile('Taux de présence', ins ? Math.round(pres.length / ins * 100) + ' %' : '—', 'des inscrits');
+  if (ins && pres.length / ins < 0.7) taux.querySelector('.kpi-v').classList.add('def');
+  tete.append(taux);
+  const ta = rfgTuile('Inscrits absents', rfgNb(abs.length), 'inscrits sans aucun point');
+  if (abs.length) ta.querySelector('.kpi-v').classList.add('def');
+  tete.append(ta);
+  el.append(tete);
+  const deux = rfgEl('div', 'deux');
+  const liste = (titre, rs, cols) => {
+    const w = rfgEl('div'); w.append(rfgEl('h3', '', titre + ' (' + rs.length + ')'));
+    if (!rs.length) { w.append(rfgEl('p', 'vide', 'Personne.')); return w; }
+    const box = rfgEl('div', 'tbox'), t = rfgEl('table'), th = rfgEl('thead'), hr = rfgEl('tr');
+    cols.forEach(([h, c]) => hr.append(rfgEl('th', c, h))); th.append(hr); t.append(th);
+    const tb = rfgEl('tbody');
+    for (const r of rs) {
+      const tr = rfgEl('tr'), m = mem.get(r.membre);
+      if (r.membre === 'Pulpeorange') tr.className = 'moi';
+      cols.forEach(([h, c, f]) => tr.append(rfgEl('td', c, f(r, m))));
+      tb.append(tr);
+    }
+    t.append(tb); box.append(t); w.append(box); return w;
+  };
+  deux.append(liste('Inscrits absents', abs.sort((a, b) => (mem.get(b.membre)?.puissance || 0) - (mem.get(a.membre)?.puissance || 0)), [
+    ['Membre', '', (r) => r.membre], ['Rang', '', (r, m) => m ? m.rang : '—'], ['Puissance', 'num', (r, m) => m ? rfg.fmt(m.puissance, 'm') : '—'], ['Dernière connexion', 'hide-n', (r, m) => m ? rfg.depuis(m.connexion_h) : '—']]));
+  deux.append(liste('Présents', [...pres, ...hors].sort((a, b) => a.classement - b.classement), [
+    ['Rang', '', (r) => String(r.classement)], ['Membre', '', (r) => r.membre + (r.statut === 'Présent sans inscription' ? ' (non inscrit)' : '')], ["Points d'Oasis", 'num', (r) => rfgNb(r.score)]]));
+  el.append(deux);
 });
 
 dash.onData(() => {
-  for (const id of ['mouvements', 'evenements']) {
+  for (const id of ['mouvements']) {
     const g = dash.data(id);
     document.querySelectorAll(`[data-empty="${id}"]`).forEach((n) => { n.hidden = !(g.status === 'ok' && g.data.length === 0); });
   }
