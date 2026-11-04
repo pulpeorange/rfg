@@ -23,7 +23,7 @@
 </style>
 <script>
 window.dash = (() => {
-  const calcs = [], draws = {}, onDatas = [], store = {};
+  const calcs = [], draws = {}, onDatas = [], store = {}, params = {};
   let state = 'loading';
   const runDraw = (name) => document.querySelectorAll(`[data-draw="${name}"]`).forEach((el) => { try { draws[name](el); } catch (e) { console.error(e); } });
   const all = () => { onDatas.forEach((f) => { try { f(); } catch (e) { console.error(e); } }); Object.keys(draws).forEach(runDraw); };
@@ -34,7 +34,10 @@ window.dash = (() => {
     data(id) { return id in store ? {status: 'ok', data: store[id], columns: [], meta: []} : {status: state === 'error' ? 'error' : 'loading', data: [], columns: [], meta: []}; },
     draw(name, fn) { if (fn) draws[name] = fn; else if (draws[name]) runDraw(name); },
     onData(fn) { onDatas.push(fn); },
-    params: () => ({}), setParams() {}, resetParams() {}, setLink() {}, refresh() {},
+    params: () => ({...params}),
+    setParams(o) { for (const [k, v] of Object.entries(o || {})) { if (v == null) delete params[k]; else params[k] = v; } all(); },
+    resetParams() { for (const k of Object.keys(params)) delete params[k]; all(); },
+    setLink() {}, refresh() {},
   };
   window.addEventListener('DOMContentLoaded', () => {
     all();
@@ -145,6 +148,19 @@ window.dash = (() => {
   .rfg h3.sous { margin-top: var(--cds-gap-lg); }
   .rfg .pied { text-align: center; color: var(--muet); font-size: var(--cds-font-size-caption); margin: 0; }
   @media (max-width: 640px) { .rfg .hide-n { display: none; } }
+  /* Fiche membre */
+  .rfg table[data-source="membres"] tbody tr { cursor: pointer; }
+  .rfg table[data-source="membres"] tbody tr:focus-visible td { outline: none; background: rgba(242, 201, 76, .12); }
+  .rfg td.lien { color: var(--or-pale); text-decoration: underline dotted rgba(242, 201, 76, .6); text-underline-offset: 3px; }
+  .rfg tbody tr.choisi td { background: rgba(169, 133, 255, .2); }
+  .rfg .fiche { border-color: var(--violet-clair); box-shadow: 0 0 0 1px rgba(169, 133, 255, .35), 0 10px 30px rgba(0, 0, 0, .35); scroll-margin-top: 16px; }
+  .rfg .fiche-tete { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--cds-gap-md); flex-wrap: wrap; margin-bottom: var(--cds-gap-sm); }
+  .rfg .fiche-nom { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: clamp(1.5rem, 4vw, 2.2rem); color: #fff; margin: 0; }
+  .rfg .fiche-fermer { font: inherit; font-size: var(--cds-font-size-caption); cursor: pointer; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--bord); background: rgba(8, 23, 51, .8); color: var(--or-pale); }
+  .rfg .fiche-fermer:hover { border-color: var(--or); }
+  .rfg .fiche .note b { color: var(--or-pale); font-weight: 600; }
+  .rfg .fiche .ev-tete { grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); }
+  .rfg .fiche .tbox td:last-child { white-space: normal; }
   [data-dash-source-state=empty] { color: transparent; }
   [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
 </style>
@@ -249,6 +265,35 @@ window.dash = (() => {
       </tr></thead>
       <tbody data-draw="table"></tbody>
     </table></div>
+    <p class="note">Clique sur un pseudo pour ouvrir sa fiche : évolution de sa puissance et participation aux événements.</p>
+  </section>
+
+  <section class="card fiche" id="fiche-membre" hidden>
+    <div class="fiche-tete">
+      <div>
+        <p class="surtitre">Fiche membre</p>
+        <h2 class="fiche-nom" data-draw="fiche-val" data-source="membres" data-field="membre">—</h2>
+        <p class="note">Rang <b data-draw="fiche-val" data-source="membres" data-field="rang">—</b> · Phare niveau <b data-draw="fiche-val" data-source="membres" data-field="niveau" data-fmt="int">—</b> · Dernière connexion : <b data-draw="fiche-val" data-source="membres" data-field="connexion_h" data-fmt="depuis">—</b></p>
+      </div>
+      <button type="button" class="fiche-fermer" aria-label="Fermer la fiche du membre">✕ Fermer</button>
+    </div>
+    <div class="ev-tete">
+      <div class="card"><span class="kpi-l">Puissance actuelle</span><span class="kpi-v" data-draw="fiche-val" data-source="membres" data-field="puissance" data-fmt="m">—</span><span class="kpi-d">au dernier relevé</span></div>
+      <div class="card"><span class="kpi-l">Progression</span><span class="kpi-v" data-draw="fiche-val" data-source="stats_membres" data-field="progression" data-fmt="signe">—</span><span class="kpi-d">depuis le premier relevé (<span data-draw="fiche-val" data-source="stats_membres" data-field="premier_releve" data-fmt="date">—</span>)</span></div>
+      <div class="card"><span class="kpi-l">Piège Léviathan</span><span class="kpi-v"><span data-draw="fiche-val" data-source="stats_membres" data-field="lev_participations" data-fmt="int">—</span> / <span data-draw="fiche-val" data-source="stats_membres" data-field="lev_total" data-fmt="int">—</span></span><span class="kpi-d">participations · meilleur rang <span data-draw="fiche-val" data-source="stats_membres" data-field="lev_meilleur" data-fmt="int">—</span></span></div>
+      <div class="card"><span class="kpi-l">Dégâts Léviathan</span><span class="kpi-v" data-draw="fiche-val" data-source="stats_membres" data-field="lev_degats" data-fmt="m">—</span><span class="kpi-d">cumulés sur les pièges relevés</span></div>
+      <div class="card"><span class="kpi-l">Guerre d'Oasis</span><span class="kpi-v"><span data-draw="fiche-val" data-source="stats_membres" data-field="oas_presences" data-fmt="int">—</span> / <span data-draw="fiche-val" data-source="stats_membres" data-field="oas_total" data-fmt="int">—</span></span><span class="kpi-d">présences · inscrit <span data-draw="fiche-val" data-source="stats_membres" data-field="oas_inscriptions" data-fmt="int">—</span> fois</span></div>
+      <div class="card"><span class="kpi-l">Points d'Oasis</span><span class="kpi-v" data-draw="fiche-val" data-source="stats_membres" data-field="oas_points" data-fmt="int">—</span><span class="kpi-d">cumulés</span></div>
+    </div>
+    <div class="deux">
+      <div><h3>Évolution de la puissance</h3><p class="note">Un point par relevé ; la courbe se dessine à partir du deuxième.</p>
+        <div class="chart" data-draw="fiche-courbe" data-source="releves"></div></div>
+      <div><h3>Participation aux événements</h3><p class="note">Tous les événements relevés, du plus récent au plus ancien.</p>
+        <div class="tbox"><table data-source="participations" data-row-key="membre,evenement">
+          <thead><tr><th data-field="titre">Événement</th><th class="num" data-field="classement">Rang</th><th class="num" data-field="score">Score</th><th data-field="statut">Statut</th></tr></thead>
+          <tbody data-draw="fiche-ev"></tbody>
+        </table></div></div>
+    </div>
   </section>
 
 
@@ -514,7 +559,9 @@ dash.draw('table', (tb) => {
     });
   for (const r of rows) {
     const tr = document.createElement('tr');
-    rfgCell(tr, r.membre); rfgCell(tr, r.rang); rfgCell(tr, rfg.fmt(r.puissance, 'm'), 'num');
+    tr.dataset.key = r.membre; tr.tabIndex = 0;
+    if (r.membre === dash.params().membre) tr.className = 'choisi';
+    rfgCell(tr, r.membre, 'lien'); rfgCell(tr, r.rang); rfgCell(tr, rfg.fmt(r.puissance, 'm'), 'num');
     const v = rfgCell(tr, r.variation == null ? '—' : rfg.signed(r.variation, 'm'), 'num');
     if (r.variation > 0) v.className = 'num up'; else if (r.variation < 0) v.className = 'num down';
     rfgCell(tr, rfg.fmt(r.niveau, 'int'), 'num hide-n'); rfgCell(tr, rfg.depuis(r.connexion_h), 'hide-n');
@@ -791,6 +838,130 @@ dash.draw('terr-evol', (el) => {
   }
 });
 
+dash.calc('participations', {
+  title: 'Participation des membres aux événements',
+  description: "Pour chaque membre du dernier relevé et chaque événement relevé : classement, score et statut (classé ou absent au Piège Léviathan ; inscrit, présent ou absent en Guerre d'Oasis).",
+  inputs: ['membres', 'ev_resume', 'evenements'],
+  fn: (membres, ev_resume, evenements) => {
+    const idx = new Map(evenements.map((r) => [r.evenement + '|' + r.membre, r]));
+    const evs = [...ev_resume].sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
+    return membres.flatMap((m) => evs.map((e) => {
+      const r = idx.get(e.evenement + '|' + m.membre);
+      const statut = e.type === "Guerre d'Oasis"
+        ? (r && r.inscrit && r.participe ? 'Inscrit et présent' : r && r.inscrit ? 'Inscrit absent' : r && r.participe ? 'Présent sans inscription' : 'Non inscrit')
+        : (r && r.participe ? 'Classé' : 'Absent du classement');
+      return {membre: m.membre, evenement: e.evenement, titre: e.titre, type: e.type, date: e.date,
+        classement: r && r.participe && r.classement != null ? Number(r.classement) : null,
+        score: r && r.participe ? Number(r.score) || 0 : null, statut};
+    }));
+  }
+});
+
+dash.calc('stats_membres', {
+  title: 'Statistiques par membre',
+  description: "Pour chaque membre : progression de puissance depuis son premier relevé, participations, meilleur rang et dégâts au Piège Léviathan, inscriptions, présences et points en Guerre d'Oasis.",
+  inputs: ['participations', 'releves', 'membres'],
+  fn: (participations, releves, membres) => membres.map((m) => {
+    const p = participations.filter((r) => r.membre === m.membre);
+    const lev = p.filter((r) => r.type === 'Piège Léviathan'), oas = p.filter((r) => r.type === "Guerre d'Oasis");
+    const classe = lev.filter((r) => r.statut === 'Classé'), rangs = classe.map((r) => r.classement).filter((c) => c != null);
+    const premier = releves.filter((r) => r.membre === m.membre).reduce((a, r) => !a || String(r.date) < String(a.date) ? r : a, null);
+    return {membre: m.membre,
+      premier_releve: premier ? String(premier.date).slice(0, 10) : null,
+      progression: premier ? m.puissance - Number(premier.puissance) : null,
+      lev_total: lev.length, lev_participations: classe.length,
+      lev_meilleur: rangs.length ? Math.min(...rangs) : null,
+      lev_degats: classe.reduce((a, r) => a + (r.score || 0), 0),
+      oas_total: oas.length,
+      oas_inscriptions: oas.filter((r) => r.statut === 'Inscrit et présent' || r.statut === 'Inscrit absent').length,
+      oas_presences: oas.filter((r) => r.statut === 'Inscrit et présent' || r.statut === 'Présent sans inscription').length,
+      oas_points: oas.reduce((a, r) => a + (r.score || 0), 0)};
+  })
+});
+
+dash.draw('fiche-val', (el) => {
+  const nom = dash.params().membre, g = dash.data(el.dataset.source), f = el.dataset.fmt;
+  if (nom) el.dataset.where = 'membre=' + encodeURIComponent(nom); else delete el.dataset.where;
+  const r = nom && g.status === 'ok' ? g.data.find((x) => x.membre === nom) : null;
+  const v = r ? r[el.dataset.field] : null;
+  el.classList.remove('up', 'down');
+  if (f === 'signe' && v) el.classList.add(v > 0 ? 'up' : 'down');
+  el.textContent = v == null ? '—' : f === 'date' ? rfg.dateFr(v) : f === 'depuis' ? rfg.depuis(v) : f === 'signe' ? rfg.signed(v, 'm') : f ? rfg.fmt(v, f) : String(v);
+});
+
+dash.draw('fiche-courbe', (el) => {
+  const nom = dash.params().membre, g = dash.data('releves');
+  el.replaceChildren();
+  if (g.status === 'error') return rfgFail(el);
+  if (!nom || g.status !== 'ok') return;
+  const ordre = {Avant: 0, Hebdo: 1, 'Après': 2};
+  const vus = new Set();
+  const rows = g.data.filter((r) => r.membre === nom)
+    .map((r) => ({cle: r.date + '|' + r.releve + '|' + (r.evenement || ''), date: String(r.date).slice(0, 10), releve: r.releve, evenement: r.evenement || '', p: Number(r.puissance), rang: r.rang}))
+    .filter((r) => !vus.has(r.cle) && vus.add(r.cle))
+    .sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : (ordre[a.releve] ?? 1) - (ordre[b.releve] ?? 1));
+  if (!rows.length) return;
+  const W = Math.max(240, el.clientWidth), H = 200, ml = 8, mr = 8, mt = 26, mb = 28;
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).style('display', 'block');
+  const x = d3.scalePoint(rows.map((r) => r.cle), [ml + 40, W - mr - 40]).padding(rows.length === 1 ? 0.5 : 0);
+  const ext = d3.extent(rows, (r) => r.p);
+  const pad = (ext[1] - ext[0]) * 0.2 || Math.abs(ext[1]) * 0.05 || 1;
+  const y = d3.scaleLinear([ext[0] - pad, ext[1] + pad], [H - mb, mt]);
+  svg.append('line').attr('x1', ml).attr('x2', W - mr).attr('y1', H - mb).attr('y2', H - mb).style('stroke', RFG_C.axe);
+  const gid = 'f' + Math.random().toString(36).slice(2);
+  const gr = svg.append('defs').append('linearGradient').attr('id', gid).attr('x1', 0).attr('x2', 0).attr('y1', 0).attr('y2', 1);
+  [[0, .4], [.6, .1], [1, 0]].forEach(([o, a]) => gr.append('stop').attr('offset', o).style('stop-color', RFG_C.violetClair).style('stop-opacity', a));
+  if (rows.length > 1) {
+    svg.append('path').datum(rows).style('fill', `url(#${gid})`).attr('d', d3.area((r) => x(r.cle), H - mb, (r) => y(r.p)));
+    svg.append('path').datum(rows).attr('fill', 'none').style('stroke', RFG_C.violetClair).attr('stroke-width', 2.5)
+      .attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round').attr('d', d3.line((r) => x(r.cle), (r) => y(r.p)));
+  }
+  svg.selectAll('circle').data(rows).join('circle').attr('cx', (r) => x(r.cle)).attr('cy', (r) => y(r.p)).attr('r', 5)
+    .style('fill', RFG_C.violetClair).style('stroke', RFG_C.nuit).attr('stroke-width', 2);
+  const last = rows[rows.length - 1];
+  svg.append('text').attr('x', x(last.cle)).attr('y', y(last.p) - 11).attr('text-anchor', rows.length > 1 ? 'end' : 'middle')
+    .style('fill', '#fff').style('font-size', 'var(--cds-font-size-body)').style('font-weight', 600).text(rfg.fmt(last.p, 'm'));
+  const ticks = rows.length <= 6 ? rows : [rows[0], rows[rows.length - 1]];
+  svg.selectAll('text.t').data(ticks).join('text').attr('class', 't').attr('x', (r) => x(r.cle)).attr('y', H - 8)
+    .attr('text-anchor', (r, i) => rows.length === 1 ? 'middle' : i === 0 ? 'start' : i === ticks.length - 1 ? 'end' : 'middle')
+    .style('fill', RFG_C.muet).style('font-size', 'var(--cds-font-size-caption)').text((r) => rfg.dateFr(r.date));
+  const tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; el.append(tip);
+  svg.on('pointermove', (ev) => {
+    const [px] = d3.pointer(ev);
+    const i = rows.reduce((b, r, k) => Math.abs(x(r.cle) - px) < Math.abs(x(rows[b].cle) - px) ? k : b, 0), r = rows[i];
+    const t = document.createElement('div'); t.className = 't';
+    t.textContent = rfg.dateFr(r.date) + (r.releve !== 'Hebdo' ? ' · ' + r.releve + ' ' + r.evenement : '') + ' · ' + r.rang;
+    const v = document.createElement('div');
+    v.textContent = rfg.fmt(r.p, 'm') + (i > 0 ? ' (' + rfg.signed(r.p - rows[i - 1].p, 'm') + ')' : '');
+    tip.replaceChildren(t, v); tip.hidden = false;
+    const k = el.clientWidth / W;
+    tip.style.left = Math.min(Math.max(0, x(r.cle) * k - tip.offsetWidth / 2), el.clientWidth - tip.offsetWidth) + 'px';
+    tip.style.top = Math.max(0, y(r.p) * k - tip.offsetHeight - 10) + 'px';
+  }).on('pointerleave', () => { tip.hidden = true; });
+});
+
+dash.draw('fiche-ev', (tb) => {
+  const nom = dash.params().membre, g = dash.data('participations');
+  tb.replaceChildren();
+  if (!nom || g.status !== 'ok') return;
+  for (const r of g.data.filter((x) => x.membre === nom)) {
+    const tr = document.createElement('tr');
+    tr.dataset.key = encodeURIComponent(r.membre) + ',' + encodeURIComponent(r.evenement);
+    rfgCell(tr, r.titre);
+    rfgCell(tr, r.classement == null ? '—' : String(r.classement), 'num');
+    rfgCell(tr, r.score == null ? '—' : rfg.fmt(r.score, 'int'), 'num');
+    const td = rfgCell(tr, ''), p = document.createElement('span');
+    p.className = 'pill ' + (r.statut === 'Inscrit absent' || r.statut === 'Absent du classement' ? 'bad' : r.statut === 'Non inscrit' || r.statut === 'Présent sans inscription' ? 'warn' : 'ok');
+    p.textContent = r.statut; td.append(p);
+    tb.append(tr);
+  }
+});
+
+dash.onData(() => {
+  const nom = dash.params().membre;
+  document.querySelectorAll('#fiche-membre').forEach((n) => { n.hidden = !nom; });
+});
+
 dash.onData(() => {
   const te = dash.data('terr_evol');
   document.querySelectorAll('[data-empty="terr_evol"]').forEach((n) => { n.hidden = !(te.status === 'ok' && new Set(te.data.map((r) => r.date)).size < 2); });
@@ -809,6 +980,16 @@ document.querySelectorAll('.rfg th button[data-sort]').forEach((b) => b.addEvent
   b.closest('th').setAttribute('aria-sort', rfg.sort.dir === 1 ? 'ascending' : 'descending');
   dash.draw('table');
 }));
+
+const rfgOuvrir = (nom) => {
+  dash.setParams({membre: dash.params().membre === nom ? null : nom});
+  setTimeout(() => document.querySelectorAll('#fiche-membre').forEach((n) => { if (!n.hidden) n.scrollIntoView({behavior: 'smooth', block: 'start'}); }), 80);
+};
+document.querySelectorAll('.rfg table[data-source="membres"]').forEach((t) => {
+  t.addEventListener('click', (ev) => { const tr = ev.target.closest('tbody tr[data-key]'); if (tr) rfgOuvrir(tr.dataset.key); });
+  t.addEventListener('keydown', (ev) => { const tr = ev.target.closest('tbody tr[data-key]'); if (tr && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); rfgOuvrir(tr.dataset.key); } });
+});
+document.querySelectorAll('.fiche-fermer').forEach((b) => b.addEventListener('click', () => dash.setParams({membre: null})));
 </script>
 
 </div>
