@@ -158,6 +158,19 @@ window.dash = (() => {
   .rfg .fiche-nom { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: clamp(1.5rem, 4vw, 2.2rem); color: #fff; margin: 0; }
   .rfg .fiche-fermer { font: inherit; font-size: var(--cds-font-size-caption); cursor: pointer; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--bord); background: rgba(8, 23, 51, .8); color: var(--or-pale); }
   .rfg .fiche-fermer:hover { border-color: var(--or); }
+  .rfg .fiche-actions { display: flex; gap: var(--cds-gap-sm); flex-wrap: wrap; }
+  .rfg .fiche-export { border-color: var(--violet-clair); color: #fff; background: linear-gradient(180deg, rgba(139, 92, 246, .55), rgba(91, 47, 192, .55)); }
+  .rfg .fiche-export:hover { border-color: #fff; }
+  .rfg .fiche-export[disabled] { opacity: .6; cursor: progress; }
+  .rfg .fiche-signature { display: none; justify-content: space-between; gap: var(--cds-gap-md); flex-wrap: wrap; margin-top: var(--cds-gap-md); padding-top: var(--cds-gap-sm); border-top: 1px solid var(--bord); color: var(--muet); font-size: var(--cds-font-size-caption); }
+  .rfg .fiche-signature b { color: var(--or); }
+  .rfg .fiche.export-en-cours .fiche-actions { display: none; }
+  .rfg .fiche.export-en-cours .fiche-signature { display: flex; }
+  .rfg .fiche.export-en-cours .tbox { max-height: none; overflow: visible; }
+  .rfg .fiche.export-en-cours .card { backdrop-filter: none; box-shadow: none; background: #12305a; }
+  .rfg .fiche .pill { display: inline-block; white-space: nowrap; }
+  .rfg .fiche.export-en-cours td { white-space: normal; }
+  .rfg .fiche.export-en-cours td:last-child { white-space: nowrap; }
   .rfg .fiche .note b { color: var(--or-pale); font-weight: 600; }
   .rfg .fiche .ev-tete { grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); }
   .rfg .fiche .tbox td:last-child { white-space: normal; }
@@ -275,7 +288,10 @@ window.dash = (() => {
         <h2 class="fiche-nom" data-draw="fiche-val" data-source="membres" data-field="membre">—</h2>
         <p class="note">Rang <b data-draw="fiche-val" data-source="membres" data-field="rang">—</b> · Phare niveau <b data-draw="fiche-val" data-source="membres" data-field="niveau" data-fmt="int">—</b> · Dernière connexion : <b data-draw="fiche-val" data-source="membres" data-field="connexion_h" data-fmt="depuis">—</b></p>
       </div>
-      <button type="button" class="fiche-fermer" aria-label="Fermer la fiche du membre">✕ Fermer</button>
+      <div class="fiche-actions">
+        <button type="button" class="fiche-fermer fiche-export" aria-label="Exporter la fiche en image PNG">⬇ Exporter en image</button>
+        <button type="button" class="fiche-fermer" aria-label="Fermer la fiche du membre">✕ Fermer</button>
+      </div>
     </div>
     <div class="ev-tete">
       <div class="card"><span class="kpi-l">Puissance actuelle</span><span class="kpi-v" data-draw="fiche-val" data-source="membres" data-field="puissance" data-fmt="m">—</span><span class="kpi-d">au dernier relevé</span></div>
@@ -294,6 +310,7 @@ window.dash = (() => {
           <tbody data-draw="fiche-ev"></tbody>
         </table></div></div>
     </div>
+    <div class="fiche-signature"><span><b>&lt;RFG&gt; Le Refuge</b> · Last Beacon · relevé du <b data-draw="dernier-date" data-source="dernier" data-field="date" data-row="0">—</b></span><span>pulpeorange.github.io/rfg</span></div>
   </section>
 
 
@@ -989,7 +1006,41 @@ document.querySelectorAll('.rfg table[data-source="membres"]').forEach((t) => {
   t.addEventListener('click', (ev) => { const tr = ev.target.closest('tbody tr[data-key]'); if (tr) rfgOuvrir(tr.dataset.key); });
   t.addEventListener('keydown', (ev) => { const tr = ev.target.closest('tbody tr[data-key]'); if (tr && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); rfgOuvrir(tr.dataset.key); } });
 });
-document.querySelectorAll('.fiche-fermer').forEach((b) => b.addEventListener('click', () => dash.setParams({membre: null})));
+document.querySelectorAll('.fiche-fermer:not(.fiche-export)').forEach((b) => b.addEventListener('click', () => dash.setParams({membre: null})));
+
+const rfgChargerH2C = () => window.html2canvas ? Promise.resolve(window.html2canvas) : new Promise((ok, ko) => {
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  s.onload = () => ok(window.html2canvas); s.onerror = () => ko(new Error('html2canvas'));
+  document.head.append(s);
+});
+document.querySelectorAll('.fiche-export').forEach((b) => b.addEventListener('click', async () => {
+  const fiche = b.closest('.fiche'), nom = dash.params().membre;
+  if (!fiche || !nom) return;
+  const libelle = b.textContent;
+  b.disabled = true; b.textContent = '⏳ Préparation…';
+  try {
+    const h2c = await rfgChargerH2C();
+    fiche.classList.add('export-en-cours');
+    const etroit = fiche.clientWidth < 900;
+    if (etroit) { fiche.style.width = '1040px'; fiche.style.maxWidth = 'none'; dash.draw('fiche-courbe'); }
+    await new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(ok)));
+    const canvas = await h2c(fiche, {backgroundColor: '#0b2246', scale: 2, useCORS: true, logging: false, windowWidth: Math.max(window.innerWidth, 1200)});
+    const blob = await new Promise((ok) => canvas.toBlob(ok, 'image/png'));
+    const fichier = 'RFG-fiche-' + nom.normalize('NFKD').replace(/[^\w-]+/g, '_').replace(/^_+|_+$/g, '') + '.png';
+    const lien = document.createElement('a');
+    lien.href = URL.createObjectURL(blob); lien.download = fichier.length > 15 ? fichier : 'RFG-fiche-membre.png';
+    document.body.append(lien); lien.click(); lien.remove();
+    setTimeout(() => URL.revokeObjectURL(lien.href), 5000);
+  } catch (e) {
+    console.error(e);
+    alert("L'export en image n'a pas pu se faire. Réessaie, ou fais une capture d'écran de la fiche.");
+  } finally {
+    fiche.classList.remove('export-en-cours');
+    if (fiche.style.width) { fiche.style.width = ''; fiche.style.maxWidth = ''; dash.draw('fiche-courbe'); }
+    b.disabled = false; b.textContent = libelle;
+  }
+}));
 </script>
 
 </div>
