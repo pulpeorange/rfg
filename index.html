@@ -42,7 +42,10 @@ window.dash = (() => {
   window.addEventListener('DOMContentLoaded', () => {
     all();
     const files = {releves: 'data/releves.json', evenements: 'data/evenements.json', ev_resume: 'data/evenements_resume.json', territoires: 'data/territoires.json'};
-    Promise.all(Object.entries(files).map(([id, f]) => fetch(f, {cache: 'no-store'}).then((r) => r.json()).then((j) => { store[id] = j.rows || j; }))).then(() => {
+    const optionnels = {classement: 'data/classement.json'};
+    const charges = Object.entries(files).map(([id, f]) => fetch(f, {cache: 'no-store'}).then((r) => r.json()).then((j) => { store[id] = j.rows || j; }));
+    const charges2 = Object.entries(optionnels).map(([id, f]) => fetch(f, {cache: 'no-store'}).then((r) => r.ok ? r.json() : {rows: []}).catch(() => ({rows: []})).then((j) => { store[id] = j.rows || j; }));
+    Promise.all([...charges, ...charges2]).then(() => {
       for (const c of calcs) store[c.id] = c.fn(...c.inputs.map((i) => store[i] || []));
       state = 'ok'; all();
     }).catch((e) => { console.error(e); state = 'error'; all(); });
@@ -174,6 +177,33 @@ window.dash = (() => {
   .rfg .fiche .note b { color: var(--or-pale); font-weight: 600; }
   .rfg .fiche .ev-tete { grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); }
   .rfg .fiche .tbox td:last-child { white-space: normal; }
+  /* Classement de la semaine */
+  .rfg .cl-tete { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--cds-gap-md); flex-wrap: wrap; }
+  .rfg .cl-bareme { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: var(--cds-font-size-caption); color: var(--muet); margin: 0 0 var(--cds-gap-md); }
+  .rfg .cl-bareme i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .rfg .cl-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: var(--cds-gap-md); }
+  .rfg .cl-carte { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 18px; border-radius: 14px; border: 1px solid var(--bord); background: rgba(8, 23, 51, .55); }
+  .rfg .cl-carte.p1 { border-color: #f2c94c; box-shadow: 0 0 0 1px rgba(242, 201, 76, .35), 0 10px 28px rgba(242, 201, 76, .12); background: linear-gradient(180deg, rgba(242, 201, 76, .12), rgba(8, 23, 51, .55) 55%); }
+  .rfg .cl-carte.p2 { border-color: #c9d6e6; } .rfg .cl-carte.p3 { border-color: #d29a6e; }
+  .rfg .cl-haut { display: flex; align-items: center; gap: 10px; }
+  .rfg .cl-haut .medaille { width: 2.1em; height: 2.1em; font-size: .95em; flex: none; }
+  .rfg .cl-haut .medaille:not(.m1):not(.m2):not(.m3) { background: rgba(159, 182, 214, .18); color: var(--texte); }
+  .rfg .cl-nom { all: unset; cursor: pointer; font-family: var(--font-anthropic-serif); font-size: 1.35rem; color: #fff; line-height: 1.1; overflow-wrap: anywhere; }
+  .rfg .cl-nom:hover, .rfg .cl-nom:focus-visible { color: var(--or-pale); text-decoration: underline dotted rgba(242, 201, 76, .6); text-underline-offset: 3px; }
+  .rfg .cl-sous { color: var(--muet); font-size: var(--cds-font-size-caption); }
+  .rfg .cl-score { display: flex; align-items: baseline; gap: 6px; }
+  .rfg .cl-score b { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 2rem; color: var(--or); font-variant-numeric: tabular-nums; }
+  .rfg .cl-score span { color: var(--muet); font-size: var(--cds-font-size-caption); }
+  .rfg .cl-pile { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: rgba(159, 182, 214, .15); gap: 2px; }
+  .rfg .cl-pile span { display: block; height: 100%; }
+  .rfg .cl-det { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 8px; font-size: var(--cds-font-size-caption); align-items: center; }
+  .rfg .cl-det .lbl { color: var(--muet); }
+  .rfg .cl-det .val { color: var(--texte); font-variant-numeric: tabular-nums; text-align: right; }
+  .rfg .cl-det .sous-barre { height: 4px; border-radius: 2px; background: rgba(159, 182, 214, .15); overflow: hidden; }
+  .rfg .cl-det .sous-barre span { display: block; height: 100%; }
+  .rfg .cl-fiche { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 10px; border-top: 1px solid rgba(159, 182, 214, .15); }
+  .rfg .cl-fiche span { font-size: var(--cds-font-size-caption); padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, .05); border: 1px solid rgba(159, 182, 214, .2); color: var(--muet); white-space: nowrap; }
+  .rfg .cl-fiche b { color: var(--texte); font-weight: 600; }
   [data-dash-source-state=empty] { color: transparent; }
   [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
 </style>
@@ -331,6 +361,16 @@ window.dash = (() => {
     <h3 class="sous">Évolution du nombre de territoires</h3>
     <p class="note" data-empty="terr_evol" hidden>La courbe apparaîtra dès le deuxième relevé de la carte.</p>
     <div class="chart" data-draw="terr-evol" data-source="terr_evol" data-evol hidden></div>
+  </section>
+
+  <section class="card">
+    <div class="cl-tete">
+      <h2 class="ancre" id="classement">Classement de la semaine</h2>
+      <select aria-label="Choisir une semaine" data-draw="cl-choix" data-source="classement" hidden></select>
+    </div>
+    <p class="note">Top 4 des membres hors R4 et R5, établi chaque vendredi sur 100 points. Clique sur un pseudo pour ouvrir sa fiche.</p>
+    <p class="cl-bareme"><span><i style="background:#f2c94c"></i>Progression de puissance · 40 pts</span><span><i style="background:#a985ff"></i>Piège Léviathan · 30 pts</span><span><i style="background:#40a0ff"></i>Guerre d'Oasis · 30 pts</span></p>
+    <div class="ev-vue" data-draw="classement" data-source="classement membres"></div>
   </section>
 
   <section class="card">
@@ -707,6 +747,64 @@ dash.draw('oasis', (el) => {
   deux.append(liste('Présents', [...pres, ...hors].sort((a, b) => a.classement - b.classement), [
     ['Rang', '', (r) => String(r.classement)], ['Membre', '', (r) => r.membre + (r.statut === 'Présent sans inscription' ? ' (non inscrit)' : '')], ["Points d'Oasis", 'num', (r) => rfgNb(r.score)]]));
   el.append(deux);
+});
+
+window.rfgCl = {semaine: null};
+const rfgClSemaines = () => {
+  const g = dash.data('classement');
+  return g.status === 'ok' ? [...new Set(g.data.map((r) => r.semaine))].sort().reverse() : [];
+};
+dash.draw('cl-choix', (sel) => {
+  const s = rfgClSemaines();
+  sel.hidden = s.length < 2;
+  sel.replaceChildren(...s.map((d) => new Option('Semaine du ' + rfg.dateFr(d), d)));
+  if (s.length) sel.value = s.includes(rfgCl.semaine) ? rfgCl.semaine : s[0];
+  sel.onchange = () => { rfgCl.semaine = sel.value; dash.draw('classement'); };
+});
+dash.draw('classement', (el) => {
+  const g = dash.data('classement'), gm = dash.data('membres');
+  el.replaceChildren();
+  el.classList.toggle('dash-skeleton', g.status === 'loading');
+  if (g.status === 'error') return rfgFail(el);
+  if (g.status !== 'ok') return;
+  const s = rfgClSemaines();
+  if (!s.length) { el.append(rfgEl('p', 'vide', 'Le premier classement sera publié vendredi.')); return; }
+  const sem = s.includes(rfgCl.semaine) ? rfgCl.semaine : s[0];
+  const rows = g.data.filter((r) => r.semaine === sem).sort((a, b) => a.classement - b.classement);
+  const mem = new Map((gm.status === 'ok' ? gm.data : []).map((m) => [m.membre, m]));
+  el.append(rfgEl('p', 'note', 'Semaine du ' + rfg.dateFr(sem)));
+  const m1 = (v) => rfg.fmt(v, 'm'), dec = (v) => v == null ? '—' : String(v).replace('.', ',');
+  const parts = [['Puissance', 'pts_puissance', 40, '#f2c94c'], ['Léviathan', 'pts_leviathan', 30, '#a985ff'], ['Oasis', 'pts_oasis', 30, '#40a0ff']];
+  const grille = rfgEl('div', 'cl-grille');
+  for (const r of rows) {
+    const c = rfgEl('div', 'cl-carte' + (r.classement <= 3 ? ' p' + r.classement : ''));
+    const haut = rfgEl('div', 'cl-haut');
+    haut.append(rfgEl('span', 'medaille' + (r.classement <= 3 ? ' m' + r.classement : ''), String(r.classement)));
+    const id = rfgEl('div');
+    const nom = rfgEl('button', 'cl-nom', r.membre); nom.type = 'button';
+    if (mem.has(r.membre)) nom.onclick = () => rfgOuvrir(r.membre); else nom.disabled = true;
+    id.append(nom, rfgEl('div', 'cl-sous', r.rang + ' · ' + m1(r.puissance)));
+    haut.append(id); c.append(haut);
+    const sc = rfgEl('div', 'cl-score'); sc.append(rfgEl('b', '', dec(r.score)), rfgEl('span', '', '/ 100 pts')); c.append(sc);
+    const pile = rfgEl('div', 'cl-pile'); pile.setAttribute('aria-hidden', 'true');
+    for (const [, k, , col] of parts) { const p = rfgEl('span'); p.style.width = (Number(r[k]) || 0) + '%'; p.style.background = col; pile.append(p); }
+    c.append(pile);
+    const det = rfgEl('div', 'cl-det');
+    for (const [lbl, k, max, col] of parts) {
+      det.append(rfgEl('span', 'lbl', lbl));
+      const sb = rfgEl('div', 'sous-barre'), f = rfgEl('span'); f.style.width = Math.min(100, (Number(r[k]) || 0) / max * 100) + '%'; f.style.background = col; sb.append(f); det.append(sb);
+      det.append(rfgEl('span', 'val', dec(r[k]) + ' / ' + max));
+    }
+    c.append(det);
+    if (r.gain_puissance != null) c.append(rfgEl('div', 'cl-sous', 'Puissance : ' + rfg.signed(r.gain_puissance, 'm') + (r.gain_pct != null ? ' (' + (r.gain_pct > 0 ? '+' : '') + dec(r.gain_pct) + ' %)' : '') + ' sur la semaine'));
+    const f = r.fiche || {};
+    const fiche = rfgEl('div', 'cl-fiche');
+    const puce = (l, v) => { if (v == null || v === '') return; const p = rfgEl('span'); p.append(l + ' '); p.append(rfgEl('b', '', String(v))); fiche.append(p); };
+    puce('Phare', f.niveau_phare); puce('Éliminations', f.eliminations == null ? null : String(f.eliminations).replace(/^([\d.]+)\s*([KMB])$/i, (x, n, u) => n.replace('.', ',') + ' ' + u.toUpperCase())); puce('Badge', f.badge_lv != null ? 'niv. ' + f.badge_lv : null); puce('Popularité', f.popularite != null ? rfgNb(f.popularite) : null);
+    if (fiche.childNodes.length) c.append(fiche);
+    grille.append(c);
+  }
+  el.append(grille);
 });
 
 dash.calc('terr_dernier', {
