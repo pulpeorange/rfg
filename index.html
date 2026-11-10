@@ -22,6 +22,7 @@
   .dash-skeleton { min-height: 180px; }
 </style>
 <script>
+window.RFG_SITE = true;
 window.dash = (() => {
   const calcs = [], draws = {}, onDatas = [], store = {}, params = {};
   let state = 'loading';
@@ -177,27 +178,6 @@ window.dash = (() => {
   .rfg .fiche .note b { color: var(--or-pale); font-weight: 600; }
   .rfg .fiche .ev-tete { grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); }
   .rfg .fiche .tbox td:last-child { white-space: normal; }
-  /* Technologies d'alliance */
-  .rfg .tk-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: var(--cds-gap-md); }
-  .rfg .tk-col { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 14px; border: 1px solid var(--bord); background: rgba(8, 23, 51, .55); }
-  .rfg .tk-tete { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .rfg .tk-tete h3 { margin: 0; font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 1.25rem; color: #fff; }
-  .rfg .tk-tete span { color: var(--muet); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
-  .rfg .tk-barre { height: 8px; border-radius: 4px; background: rgba(159, 182, 214, .15); overflow: hidden; }
-  .rfg .tk-barre span { display: block; height: 100%; background: var(--or); }
-  .rfg .tk-liste { display: flex; flex-direction: column; gap: 7px; margin: 0; padding: 0; list-style: none; }
-  .rfg .tk-ligne { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; font-size: var(--cds-font-size-caption); }
-  .rfg .tk-ligne .nom { color: var(--texte); overflow-wrap: anywhere; }
-  .rfg .tk-ligne .niv { color: var(--muet); font-variant-numeric: tabular-nums; text-align: right; }
-  .rfg .tk-ligne .mini { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: rgba(159, 182, 214, .15); overflow: hidden; }
-  .rfg .tk-ligne .mini span { display: block; height: 100%; background: #40a0ff; }
-  .rfg .tk-ligne.verrou .nom, .rfg .tk-ligne.verrou .niv { color: rgba(159, 182, 214, .55); }
-  .rfg .tk-ligne.reco .nom { color: var(--or-pale); font-weight: 600; }
-  .rfg .tk-ligne.reco .mini span { background: var(--or); }
-  .rfg .tk-badge { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: .72rem; font-weight: 600; vertical-align: 1px; background: rgba(242, 201, 76, .18); color: var(--or-pale); border: 1px solid rgba(242, 201, 76, .4); }
-  .rfg .tk-faites { font-size: var(--cds-font-size-caption); color: var(--muet); padding-top: 8px; border-top: 1px solid rgba(159, 182, 214, .15); }
-  .rfg .tk-faites summary { cursor: pointer; color: var(--texte); }
-  .rfg .tk-faites ul { margin: 6px 0 0; padding-left: 1.1em; }
   /* Classement de la semaine */
   .rfg .cl-tete { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--cds-gap-md); flex-wrap: wrap; }
   .rfg .cl-bareme { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: var(--cds-font-size-caption); color: var(--muet); margin: 0 0 var(--cds-gap-md); }
@@ -227,11 +207,37 @@ window.dash = (() => {
   .rfg .cl-fiche b { color: var(--texte); font-weight: 600; }
   [data-dash-source-state=empty] { color: transparent; }
   [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+
+  /* Langues */
+  .rfg:not(.l-en) .t-en, .rfg:not(.l-es) .t-es, .rfg.l-en .t-fr, .rfg.l-es .t-fr { display: none !important; }
+  .rfg .langues { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 6px; margin-bottom: calc(-1 * var(--cds-gap-md)); }
+  .rfg .langues a { font-size: var(--cds-font-size-caption); padding: 3px 10px; border-radius: 999px; border: 1px solid var(--bord); color: var(--muet); text-decoration: none; background: rgba(255, 255, 255, .04); }
+  .rfg .langues a:hover, .rfg .langues a:focus-visible { color: #fff; border-color: var(--or); }
+  .rfg .langues a.actif { background: var(--or); border-color: var(--or); color: #0b1f3a; font-weight: 600; }
+  /* Technologies */
+  .rfg .tech-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: var(--cds-gap-md); }
+  .rfg .tech-col { padding: 14px 16px; border-radius: 14px; border: 1px solid var(--bord); background: rgba(8, 23, 51, .55); min-width: 0; }
+  .rfg .tech-col h3 { margin: 0; color: #fff; font-size: var(--cds-font-size-body); }
+  .rfg .tech-col .note { margin: 2px 0 10px; }
+  .rfg .tech-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+  .rfg .tech-haut { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: var(--cds-font-size-caption); }
+  .rfg .tech-nom { color: var(--texte); }
+  .rfg .tech-niv { color: var(--muet); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rfg .tech-barre { height: 5px; border-radius: 3px; background: rgba(159, 182, 214, .15); overflow: hidden; margin-top: 4px; }
+  .rfg .tech-barre span { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--violet), var(--violet-clair)); }
+  .rfg .tech-item.fini .tech-barre span { background: var(--or); }
+  .rfg .tech-item.fini .tech-niv { color: var(--or); font-weight: 600; }
+  .rfg .tech-item.verrou { opacity: .5; }
 </style>
 
 <div class="rfg">
+  <nav class="langues" aria-label="Langue / Language / Idioma">
+    <a href="?lang=fr" hreflang="fr" lang="fr" data-lang="fr">🇫🇷 Français</a>
+    <a href="?lang=en" hreflang="en" lang="en" data-lang="en">🇬🇧 English</a>
+    <a href="?lang=es" hreflang="es" lang="es" data-lang="es">🇪🇸 Español</a>
+  </nav>
   <header class="hero">
-    <svg class="blason" viewBox="0 0 120 150" role="img" aria-label="Bannière de l'alliance">
+    <svg class="blason" viewBox="0 0 120 150" role="img" aria-label="Bannière de l'alliance" data-aria-fr="Bannière de l'alliance" data-aria-en="Alliance banner" data-aria-es="Estandarte de la alianza">
       <defs>
         <linearGradient id="rfg-ban" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#5b2fc0"/></linearGradient>
         <linearGradient id="rfg-or" x1="0" x2="1"><stop offset="0" stop-color="#c99a2e"/><stop offset=".5" stop-color="#f7e3a1"/><stop offset="1" stop-color="#c99a2e"/></linearGradient>
@@ -243,179 +249,272 @@ window.dash = (() => {
       <path d="M60 41 L65.6 55.6 L81 56 L68.8 65.6 L73.2 80.6 L60 71.8 L46.8 80.6 L51.2 65.6 L39 56 L54.4 55.6 Z" fill="#fff"/>
     </svg>
     <div>
-      <p class="surtitre">Last Beacon · Tableau de bord d'alliance</p>
+      <p class="surtitre"><span class="t-fr">Last Beacon · Tableau de bord d'alliance</span><span class="t-en">Last Beacon · Alliance dashboard</span><span class="t-es">Last Beacon · Panel de la alianza</span></p>
       <h1><span class="tag">&lt;RFG&gt;</span> Le Refuge</h1>
-      <p class="devise">« Que les vagues soient douces ou déchaînées, notre navire tient le cap. »</p>
+      <p class="devise"><span class="t-fr">« Que les vagues soient douces ou déchaînées, notre navire tient le cap. »</span><span class="t-en">“Calm seas or raging waves, our ship holds its course.”</span><span class="t-es">«Con olas suaves o embravecidas, nuestro barco mantiene el rumbo.»</span></p>
       <div class="puces">
-        <span class="puce">Chef d'alliance : Şeβ</span>
-        <span class="puce">🇫🇷 Alliance francophone</span>
-        <span class="puce">Alliés : 1MP · ELF · AGV · AFR · POS · RTD</span>
+        <span class="puce"><span class="t-fr">Chef d'alliance : Şeβ</span><span class="t-en">Alliance leader: Şeβ</span><span class="t-es">Líder de la alianza: Şeβ</span></span>
+        <span class="puce">🇫🇷 <span class="t-fr">Alliance francophone</span><span class="t-en">French-speaking alliance</span><span class="t-es">Alianza francófona</span></span>
+        <span class="puce"><span class="t-fr">Alliés :</span><span class="t-en">Allies:</span><span class="t-es">Aliados:</span> 1MP · ELF · AGV · AFR · POS · RTD</span>
       </div>
     </div>
   </header>
 
-  <p class="lead">Relevé du <b data-draw="dernier-date" data-source="dernier" data-field="date" data-row="0">—</b> : <b data-draw="kpi" data-source="dernier" data-field="membres" data-row="0" data-fmt="int">—</b> membres à bord, dont <b data-draw="kpi" data-source="dernier" data-field="inactifs_7j" data-row="0" data-fmt="int">—</b> absents depuis plus de 7 jours, à relancer ou à remplacer en priorité.</p>
+  <p class="t-fr lead">Relevé du <b data-draw="dernier-date" data-source="dernier" data-field="date" data-row="0">—</b> : <b data-draw="kpi" data-source="dernier" data-field="membres" data-row="0" data-fmt="int">—</b> membres à bord, dont <b data-draw="kpi" data-source="dernier" data-field="inactifs_7j" data-row="0" data-fmt="int">—</b> absents depuis plus de 7 jours, à relancer ou à remplacer en priorité.</p><p class="t-en lead">Survey of <b data-draw="dernier-date" data-source="dernier" data-field="date" data-row="0">—</b>: <b data-draw="kpi" data-source="dernier" data-field="membres" data-row="0" data-fmt="int">—</b> members aboard, including <b data-draw="kpi" data-source="dernier" data-field="inactifs_7j" data-row="0" data-fmt="int">—</b> absent for more than 7 days, to nudge or replace first.</p><p class="t-es lead">Registro del <b data-draw="dernier-date" data-source="dernier" data-field="date" data-row="0">—</b>: <b data-draw="kpi" data-source="dernier" data-field="membres" data-row="0" data-fmt="int">—</b> miembros a bordo, de los cuales <b data-draw="kpi" data-source="dernier" data-field="inactifs_7j" data-row="0" data-fmt="int">—</b> llevan más de 7 días ausentes; hay que reactivarlos o reemplazarlos primero.</p>
 
 
-  <section class="tiles" aria-label="Chiffres clés">
-    <div class="card"><span class="kpi-l">Membres</span>
+  <section class="tiles" aria-label="Chiffres clés" data-aria-fr="Chiffres clés" data-aria-en="Key figures" data-aria-es="Cifras clave">
+    <div class="card"><span class="kpi-l"><span class="t-fr">Membres</span><span class="t-en">Members</span><span class="t-es">Miembros</span></span>
       <span class="kpi-v" data-draw="kpi" data-source="dernier" data-field="membres" data-row="0" data-fmt="int">—</span>
       <span class="kpi-d" data-draw="delta" data-source="dernier" data-field="d_membres" data-row="0" data-fmt="int">—</span></div>
-    <div class="card"><span class="kpi-l">Puissance totale</span>
+    <div class="card"><span class="kpi-l"><span class="t-fr">Puissance totale</span><span class="t-en">Total power</span><span class="t-es">Poder total</span></span>
       <span class="kpi-v" data-draw="kpi" data-source="dernier" data-field="puissance_totale" data-row="0" data-fmt="md">—</span>
       <span class="kpi-d" data-draw="delta" data-source="dernier" data-field="d_puissance" data-row="0" data-fmt="m">—</span></div>
-    <div class="card"><span class="kpi-l">Puissance moyenne</span>
+    <div class="card"><span class="kpi-l"><span class="t-fr">Puissance moyenne</span><span class="t-en">Average power</span><span class="t-es">Poder medio</span></span>
       <span class="kpi-v" data-draw="kpi" data-source="dernier" data-field="puissance_moy" data-row="0" data-fmt="m">—</span>
       <span class="kpi-d" data-draw="delta" data-source="dernier" data-field="d_moy" data-row="0" data-fmt="m">—</span></div>
-    <div class="card"><span class="kpi-l">Connectés sur 24 h</span>
+    <div class="card"><span class="kpi-l"><span class="t-fr">Connectés sur 24 h</span><span class="t-en">Online in the last 24 h</span><span class="t-es">Conectados en 24 h</span></span>
       <span class="kpi-v" data-draw="kpi" data-source="dernier" data-field="actifs_24h" data-row="0" data-fmt="int">—</span>
       <span class="kpi-d" data-draw="delta" data-source="dernier" data-field="d_actifs" data-row="0" data-fmt="int">—</span></div>
-    <div class="card"><span class="kpi-l">Absents &gt; 7 jours</span>
+    <div class="card"><span class="kpi-l"><span class="t-fr">Absents &gt; 7 jours</span><span class="t-en">Absent &gt; 7 days</span><span class="t-es">Ausentes &gt; 7 días</span></span>
       <span class="kpi-v" data-draw="kpi" data-source="dernier" data-field="inactifs_7j" data-row="0" data-fmt="int">—</span>
       <span class="kpi-d" data-draw="delta" data-source="dernier" data-field="d_inactifs" data-row="0" data-fmt="int" data-inverse="1">—</span></div>
   </section>
 
   <section>
-    <h2 class="ancre" id="evolution">Évolution</h2>
-    <p class="note">Un point par relevé (quotidien à 17h, ou avant/après un événement). Les courbes se dessinent à partir du deuxième relevé.</p>
+    <h2 class="ancre" id="evolution"><span class="t-fr">Évolution</span><span class="t-en">Trends</span><span class="t-es">Evolución</span></h2>
+    <p class="note"><span class="t-fr">Un point par relevé (quotidien à 17h, ou avant/après un événement). Les courbes se dessinent à partir du deuxième relevé.</span><span class="t-en">One point per survey (daily at 5 pm Paris time, or before/after an event). Lines appear from the second survey.</span><span class="t-es">Un punto por registro (diario a las 17 h de París, o antes/después de un evento). Las curvas aparecen a partir del segundo registro.</span></p>
     <div class="grid">
-      <div class="card"><h2>Effectif</h2><p class="note">Nombre de membres</p>
+      <div class="card"><h2><span class="t-fr">Effectif</span><span class="t-en">Headcount</span><span class="t-es">Efectivo</span></h2><p class="note"><span class="t-fr">Nombre de membres</span><span class="t-en">Number of members</span><span class="t-es">Número de miembros</span></p>
         <div class="chart" data-draw="serie" data-source="synthese" data-field="membres" data-fmt="int"></div></div>
-      <div class="card"><h2>Puissance totale</h2><p class="note">Somme des puissances affichées</p>
+      <div class="card"><h2><span class="t-fr">Puissance totale</span><span class="t-en">Total power</span><span class="t-es">Poder total</span></h2><p class="note"><span class="t-fr">Somme des puissances affichées</span><span class="t-en">Sum of displayed power</span><span class="t-es">Suma del poder mostrado</span></p>
         <div class="chart" data-draw="serie" data-source="synthese" data-field="puissance_totale" data-fmt="md"></div></div>
-      <div class="card"><h2>Activité</h2><p class="note">Membres connectés dans les dernières 24 h</p>
+      <div class="card"><h2><span class="t-fr">Activité</span><span class="t-en">Activity</span><span class="t-es">Actividad</span></h2><p class="note"><span class="t-fr">Membres connectés dans les dernières 24 h</span><span class="t-en">Members online in the last 24 h</span><span class="t-es">Miembros conectados en las últimas 24 h</span></p>
         <div class="chart" data-draw="serie" data-source="synthese" data-field="actifs_24h" data-fmt="int"></div></div>
     </div>
   </section>
 
   <section class="grid">
-    <div class="card"><h2 class="ancre" id="rangs">Répartition par rang</h2><p class="note">Dernier relevé : membres et puissance cumulée par rang</p>
+    <div class="card"><h2 class="ancre" id="rangs"><span class="t-fr">Répartition par rang</span><span class="t-en">Breakdown by rank</span><span class="t-es">Distribución por rango</span></h2><p class="note"><span class="t-fr">Dernier relevé : membres et puissance cumulée par rang</span><span class="t-en">Latest survey: members and total power by rank</span><span class="t-es">Último registro: miembros y poder acumulado por rango</span></p>
       <div class="chart" data-draw="barres" data-source="rangs" data-label="rang"></div></div>
-    <div class="card"><h2 class="ancre" id="assiduite">Dernière connexion</h2><p class="note">Dernier relevé : membres par ancienneté de dernière connexion</p>
+    <div class="card"><h2 class="ancre" id="assiduite"><span class="t-fr">Dernière connexion</span><span class="t-en">Last login</span><span class="t-es">Última conexión</span></h2><p class="note"><span class="t-fr">Dernier relevé : membres par ancienneté de dernière connexion</span><span class="t-en">Latest survey: members by time since last login</span><span class="t-es">Último registro: miembros según su última conexión</span></p>
       <div class="chart" data-draw="barres" data-source="activite" data-label="tranche"></div></div>
   </section>
 
   <section class="card">
-    <h2 class="ancre" id="mouvements">Arrivées et départs</h2>
-    <p class="note">Comparaison des deux derniers relevés</p>
-    <p class="note" data-empty="mouvements" hidden>Aucun mouvement à afficher : il faut au moins deux relevés.</p>
+    <h2 class="ancre" id="mouvements"><span class="t-fr">Arrivées et départs</span><span class="t-en">Arrivals and departures</span><span class="t-es">Llegadas y salidas</span></h2>
+    <p class="note"><span class="t-fr">Comparaison des deux derniers relevés</span><span class="t-en">Comparison of the last two surveys</span><span class="t-es">Comparación de los dos últimos registros</span></p>
+    <p class="note" data-empty="mouvements" hidden><span class="t-fr">Aucun mouvement à afficher : il faut au moins deux relevés.</span><span class="t-en">No movement to show: at least two surveys are needed.</span><span class="t-es">No hay movimientos que mostrar: hacen falta al menos dos registros.</span></p>
     <div class="tbox"><table data-source="mouvements" data-row-key="membre">
-      <thead><tr><th data-field="mouvement">Mouvement</th><th data-field="membre">Membre</th><th data-field="rang">Rang</th><th class="num" data-field="puissance">Puissance</th></tr></thead>
+      <thead><tr><th data-field="mouvement"><span class="t-fr">Mouvement</span><span class="t-en">Movement</span><span class="t-es">Movimiento</span></th><th data-field="membre"><span class="t-fr">Membre</span><span class="t-en">Member</span><span class="t-es">Miembro</span></th><th data-field="rang"><span class="t-fr">Rang</span><span class="t-en">Rank</span><span class="t-es">Rango</span></th><th class="num" data-field="puissance"><span class="t-fr">Puissance</span><span class="t-en">Power</span><span class="t-es">Poder</span></th></tr></thead>
       <tbody data-draw="mouv"></tbody>
     </table></div>
   </section>
 
   <section class="card">
-    <h2 class="ancre" id="membres">Membres</h2>
-    <p class="note">Dernier relevé. Variation : écart de puissance avec le relevé précédent. Puissances arrondies à 0,1 M comme dans le jeu.</p>
+    <h2 class="ancre" id="membres"><span class="t-fr">Membres</span><span class="t-en">Members</span><span class="t-es">Miembros</span></h2>
+    <p class="note"><span class="t-fr">Dernier relevé. Variation : écart de puissance avec le relevé précédent. Puissances arrondies à 0,1 M comme dans le jeu.</span><span class="t-en">Latest survey. Change: power difference since the previous survey. Power rounded to 0.1 M as in the game.</span><span class="t-es">Último registro. Variación: diferencia de poder con el registro anterior. Poder redondeado a 0,1 M como en el juego.</span></p>
     <div class="tools">
-      <input type="search" placeholder="Rechercher un membre" aria-label="Rechercher un membre" class="rfg-search">
-      <select class="rfg-filtre" aria-label="Filtrer par statut">
+      <input type="search" placeholder="Rechercher un membre" aria-label="Rechercher un membre" class="t-fr rfg-search">
+      <select class="t-fr rfg-filtre" aria-label="Filtrer par statut">
         <option value="">Tous les statuts</option>
         <option value="Actif">Actifs</option>
         <option value="À surveiller">À surveiller (3 à 7 j)</option>
         <option value="Absent">Absents (&gt; 7 j)</option>
       </select>
+      <input type="search" placeholder="Search a member" aria-label="Search a member" class="t-en rfg-search">
+      <select class="t-en rfg-filtre" aria-label="Filter by status">
+        <option value="">All statuses</option>
+        <option value="Actif">Active</option>
+        <option value="À surveiller">To watch (3–7 d)</option>
+        <option value="Absent">Absent (&gt; 7 d)</option>
+      </select>
+      <input type="search" placeholder="Buscar un miembro" aria-label="Buscar un miembro" class="t-es rfg-search">
+      <select class="t-es rfg-filtre" aria-label="Filtrar por estado">
+        <option value="">Todos los estados</option>
+        <option value="Actif">Activos</option>
+        <option value="À surveiller">A vigilar (3 a 7 d)</option>
+        <option value="Absent">Ausentes (&gt; 7 d)</option>
+      </select>
     </div>
     <div class="tbox"><table data-source="membres" data-row-key="membre">
       <thead><tr>
-        <th data-field="membre"><button data-sort="membre">Membre</button></th>
-        <th data-field="rang"><button data-sort="rang">Rang</button></th>
-        <th class="num" data-field="puissance" aria-sort="descending"><button data-sort="puissance">Puissance</button></th>
-        <th class="num" data-field="variation"><button data-sort="variation">Variation</button></th>
-        <th class="num hide-n" data-field="niveau"><button data-sort="niveau">Phare</button></th>
-        <th class="hide-n" data-field="connexion_h"><button data-sort="connexion_h">Dernière connexion</button></th>
-        <th data-field="statut"><button data-sort="statut">Statut</button></th>
+        <th data-field="membre"><button data-sort="membre"><span class="t-fr">Membre</span><span class="t-en">Member</span><span class="t-es">Miembro</span></button></th>
+        <th data-field="rang"><button data-sort="rang"><span class="t-fr">Rang</span><span class="t-en">Rank</span><span class="t-es">Rango</span></button></th>
+        <th class="num" data-field="puissance" aria-sort="descending"><button data-sort="puissance"><span class="t-fr">Puissance</span><span class="t-en">Power</span><span class="t-es">Poder</span></button></th>
+        <th class="num" data-field="variation"><button data-sort="variation"><span class="t-fr">Variation</span><span class="t-en">Change</span><span class="t-es">Variación</span></button></th>
+        <th class="num hide-n" data-field="niveau"><button data-sort="niveau"><span class="t-fr">Phare</span><span class="t-en">Beacon</span><span class="t-es">Faro</span></button></th>
+        <th class="hide-n" data-field="connexion_h"><button data-sort="connexion_h"><span class="t-fr">Dernière connexion</span><span class="t-en">Last login</span><span class="t-es">Última conexión</span></button></th>
+        <th data-field="statut"><button data-sort="statut"><span class="t-fr">Statut</span><span class="t-en">Status</span><span class="t-es">Estado</span></button></th>
       </tr></thead>
       <tbody data-draw="table"></tbody>
     </table></div>
-    <p class="note">Clique sur un pseudo pour ouvrir sa fiche : évolution de sa puissance et participation aux événements.</p>
+    <p class="note"><span class="t-fr">Clique sur un pseudo pour ouvrir sa fiche : évolution de sa puissance et participation aux événements.</span><span class="t-en">Click a name to open their profile: power trend and event participation.</span><span class="t-es">Haz clic en un nombre para abrir su ficha: evolución de su poder y participación en eventos.</span></p>
   </section>
 
   <section class="card fiche" id="fiche-membre" hidden>
     <div class="fiche-tete">
       <div>
-        <p class="surtitre">Fiche membre</p>
+        <p class="surtitre"><span class="t-fr">Fiche membre</span><span class="t-en">Member profile</span><span class="t-es">Ficha del miembro</span></p>
         <h2 class="fiche-nom" data-draw="fiche-val" data-source="membres" data-field="membre">—</h2>
-        <p class="note">Rang <b data-draw="fiche-val" data-source="membres" data-field="rang">—</b> · Phare niveau <b data-draw="fiche-val" data-source="membres" data-field="niveau" data-fmt="int">—</b> · Dernière connexion : <b data-draw="fiche-val" data-source="membres" data-field="connexion_h" data-fmt="depuis">—</b></p>
+        <p class="t-fr note">Rang <b data-draw="fiche-val" data-source="membres" data-field="rang">—</b> · Phare niveau <b data-draw="fiche-val" data-source="membres" data-field="niveau" data-fmt="int">—</b> · Dernière connexion : <b data-draw="fiche-val" data-source="membres" data-field="connexion_h" data-fmt="depuis">—</b></p><p class="t-en note">Rank <b data-draw="fiche-val" data-source="membres" data-field="rang">—</b> · Beacon level <b data-draw="fiche-val" data-source="membres" data-field="niveau" data-fmt="int">—</b> · Last login: <b data-draw="fiche-val" data-source="membres" data-field="connexion_h" data-fmt="depuis">—</b></p><p class="t-es note">Rango <b data-draw="fiche-val" data-source="membres" data-field="rang">—</b> · Faro nivel <b data-draw="fiche-val" data-source="membres" data-field="niveau" data-fmt="int">—</b> · Última conexión: <b data-draw="fiche-val" data-source="membres" data-field="connexion_h" data-fmt="depuis">—</b></p>
       </div>
       <div class="fiche-actions">
-        <button type="button" class="fiche-fermer fiche-export" aria-label="Exporter la fiche en image PNG">⬇ Exporter en image</button>
-        <button type="button" class="fiche-fermer" aria-label="Fermer la fiche du membre">✕ Fermer</button>
+        <button type="button" class="fiche-fermer fiche-export" aria-label="Exporter la fiche en image PNG" data-aria-fr="Exporter la fiche en image PNG" data-aria-en="Export the profile as a PNG image" data-aria-es="Exportar la ficha como imagen PNG">⬇ <span class="t-fr">Exporter en image</span><span class="t-en">Export as image</span><span class="t-es">Exportar como imagen</span></button>
+        <button type="button" class="fiche-fermer" aria-label="Fermer la fiche du membre" data-aria-fr="Fermer la fiche du membre" data-aria-en="Close the member profile" data-aria-es="Cerrar la ficha del miembro">✕ <span class="t-fr">Fermer</span><span class="t-en">Close</span><span class="t-es">Cerrar</span></button>
       </div>
     </div>
     <div class="ev-tete">
-      <div class="card"><span class="kpi-l">Puissance actuelle</span><span class="kpi-v" data-draw="fiche-val" data-source="membres" data-field="puissance" data-fmt="m">—</span><span class="kpi-d">au dernier relevé</span></div>
-      <div class="card"><span class="kpi-l">Progression</span><span class="kpi-v" data-draw="fiche-val" data-source="stats_membres" data-field="progression" data-fmt="signe">—</span><span class="kpi-d">depuis le premier relevé (<span data-draw="fiche-val" data-source="stats_membres" data-field="premier_releve" data-fmt="date">—</span>)</span></div>
-      <div class="card"><span class="kpi-l">Piège Léviathan</span><span class="kpi-v"><span data-draw="fiche-val" data-source="stats_membres" data-field="lev_participations" data-fmt="int">—</span> / <span data-draw="fiche-val" data-source="stats_membres" data-field="lev_total" data-fmt="int">—</span></span><span class="kpi-d">participations · meilleur rang <span data-draw="fiche-val" data-source="stats_membres" data-field="lev_meilleur" data-fmt="int">—</span></span></div>
-      <div class="card"><span class="kpi-l">Dégâts Léviathan</span><span class="kpi-v" data-draw="fiche-val" data-source="stats_membres" data-field="lev_degats" data-fmt="m">—</span><span class="kpi-d">cumulés sur les pièges relevés</span></div>
-      <div class="card"><span class="kpi-l">Guerre d'Oasis</span><span class="kpi-v"><span data-draw="fiche-val" data-source="stats_membres" data-field="oas_presences" data-fmt="int">—</span> / <span data-draw="fiche-val" data-source="stats_membres" data-field="oas_total" data-fmt="int">—</span></span><span class="kpi-d">présences · inscrit <span data-draw="fiche-val" data-source="stats_membres" data-field="oas_inscriptions" data-fmt="int">—</span> fois</span></div>
-      <div class="card"><span class="kpi-l">Points d'Oasis</span><span class="kpi-v" data-draw="fiche-val" data-source="stats_membres" data-field="oas_points" data-fmt="int">—</span><span class="kpi-d">cumulés</span></div>
+      <div class="card"><span class="kpi-l"><span class="t-fr">Puissance actuelle</span><span class="t-en">Current power</span><span class="t-es">Poder actual</span></span><span class="kpi-v" data-draw="fiche-val" data-source="membres" data-field="puissance" data-fmt="m">—</span><span class="kpi-d"><span class="t-fr">au dernier relevé</span><span class="t-en">at the latest survey</span><span class="t-es">en el último registro</span></span></div>
+      <div class="card"><span class="kpi-l"><span class="t-fr">Progression</span><span class="t-en">Progress</span><span class="t-es">Progresión</span></span><span class="kpi-v" data-draw="fiche-val" data-source="stats_membres" data-field="progression" data-fmt="signe">—</span><span class="t-fr kpi-d">depuis le premier relevé (<span data-draw="fiche-val" data-source="stats_membres" data-field="premier_releve" data-fmt="date">—</span>)</span><span class="t-en kpi-d">since the first survey (<span data-draw="fiche-val" data-source="stats_membres" data-field="premier_releve" data-fmt="date">—</span>)</span><span class="t-es kpi-d">desde el primer registro (<span data-draw="fiche-val" data-source="stats_membres" data-field="premier_releve" data-fmt="date">—</span>)</span></div>
+      <div class="card"><span class="kpi-l"><span class="t-fr">Piège Léviathan</span><span class="t-en">Leviathan Trap</span><span class="t-es">Trampa del Leviatán</span></span><span class="kpi-v"><span data-draw="fiche-val" data-source="stats_membres" data-field="lev_participations" data-fmt="int">—</span> / <span data-draw="fiche-val" data-source="stats_membres" data-field="lev_total" data-fmt="int">—</span></span><span class="t-fr kpi-d">participations · meilleur rang <span data-draw="fiche-val" data-source="stats_membres" data-field="lev_meilleur" data-fmt="int">—</span></span><span class="t-en kpi-d">participations · best rank <span data-draw="fiche-val" data-source="stats_membres" data-field="lev_meilleur" data-fmt="int">—</span></span><span class="t-es kpi-d">participaciones · mejor puesto <span data-draw="fiche-val" data-source="stats_membres" data-field="lev_meilleur" data-fmt="int">—</span></span></div>
+      <div class="card"><span class="kpi-l"><span class="t-fr">Dégâts Léviathan</span><span class="t-en">Leviathan damage</span><span class="t-es">Daño al Leviatán</span></span><span class="kpi-v" data-draw="fiche-val" data-source="stats_membres" data-field="lev_degats" data-fmt="m">—</span><span class="kpi-d"><span class="t-fr">cumulés sur les pièges relevés</span><span class="t-en">total over recorded traps</span><span class="t-es">acumulado en las trampas registradas</span></span></div>
+      <div class="card"><span class="kpi-l"><span class="t-fr">Guerre d'Oasis</span><span class="t-en">Oasis War</span><span class="t-es">Guerra del Oasis</span></span><span class="kpi-v"><span data-draw="fiche-val" data-source="stats_membres" data-field="oas_presences" data-fmt="int">—</span> / <span data-draw="fiche-val" data-source="stats_membres" data-field="oas_total" data-fmt="int">—</span></span><span class="t-fr kpi-d">présences · inscrit <span data-draw="fiche-val" data-source="stats_membres" data-field="oas_inscriptions" data-fmt="int">—</span> fois</span><span class="t-en kpi-d">attendances · registered <span data-draw="fiche-val" data-source="stats_membres" data-field="oas_inscriptions" data-fmt="int">—</span> times</span><span class="t-es kpi-d">asistencias · inscrito <span data-draw="fiche-val" data-source="stats_membres" data-field="oas_inscriptions" data-fmt="int">—</span> veces</span></div>
+      <div class="card"><span class="kpi-l"><span class="t-fr">Points d'Oasis</span><span class="t-en">Oasis points</span><span class="t-es">Puntos del Oasis</span></span><span class="kpi-v" data-draw="fiche-val" data-source="stats_membres" data-field="oas_points" data-fmt="int">—</span><span class="kpi-d"><span class="t-fr">cumulés</span><span class="t-en">total</span><span class="t-es">acumulados</span></span></div>
     </div>
     <div class="deux">
-      <div><h3>Évolution de la puissance</h3><p class="note">Un point par relevé ; la courbe se dessine à partir du deuxième.</p>
+      <div><h3><span class="t-fr">Évolution de la puissance</span><span class="t-en">Power trend</span><span class="t-es">Evolución del poder</span></h3><p class="note"><span class="t-fr">Un point par relevé ; la courbe se dessine à partir du deuxième.</span><span class="t-en">One point per survey; the line appears from the second one.</span><span class="t-es">Un punto por registro; la curva aparece a partir del segundo.</span></p>
         <div class="chart" data-draw="fiche-courbe" data-source="releves"></div></div>
-      <div><h3>Participation aux événements</h3><p class="note">Tous les événements relevés, du plus récent au plus ancien.</p>
+      <div><h3><span class="t-fr">Participation aux événements</span><span class="t-en">Event participation</span><span class="t-es">Participación en eventos</span></h3><p class="note"><span class="t-fr">Tous les événements relevés, du plus récent au plus ancien.</span><span class="t-en">All recorded events, newest first.</span><span class="t-es">Todos los eventos registrados, del más reciente al más antiguo.</span></p>
         <div class="tbox"><table data-source="participations" data-row-key="membre,evenement">
-          <thead><tr><th data-field="titre">Événement</th><th class="num" data-field="classement">Rang</th><th class="num" data-field="score">Score</th><th data-field="statut">Statut</th></tr></thead>
+          <thead><tr><th data-field="titre"><span class="t-fr">Événement</span><span class="t-en">Event</span><span class="t-es">Evento</span></th><th class="num" data-field="classement"><span class="t-fr">Rang</span><span class="t-en">Rank</span><span class="t-es">Rango</span></th><th class="num" data-field="score"><span class="t-fr">Score</span><span class="t-en">Score</span><span class="t-es">Puntuación</span></th><th data-field="statut"><span class="t-fr">Statut</span><span class="t-en">Status</span><span class="t-es">Estado</span></th></tr></thead>
           <tbody data-draw="fiche-ev"></tbody>
         </table></div></div>
     </div>
-    <div class="fiche-signature"><span><b>&lt;RFG&gt; Le Refuge</b> · Last Beacon · relevé du <b data-draw="dernier-date" data-source="dernier" data-field="date" data-row="0">—</b></span><span>pulpeorange.github.io/rfg</span></div>
+    <div class="fiche-signature"><span><b>&lt;RFG&gt; Le Refuge</b> · Last Beacon · <span class="t-fr">relevé du</span><span class="t-en">survey of</span><span class="t-es">registro del</span> <b data-draw="dernier-date" data-source="dernier" data-field="date" data-row="0">—</b></span><span>pulpeorange.github.io/rfg</span></div>
   </section>
 
 
   <section class="card">
-    <h2 class="ancre" id="territoires">Carte des territoires</h2>
-    <p class="note">Zone maritime #17 · relevé du <b data-draw="val" data-source="terr_resume" data-field="date" data-row="0" data-fmt="date">—</b>. Chaque point est un territoire, placé comme sur la carte du jeu ; sa taille indique le niveau.</p>
+    <h2 class="ancre" id="territoires"><span class="t-fr">Carte des territoires</span><span class="t-en">Territory map</span><span class="t-es">Mapa de territorios</span></h2>
+    <p class="t-fr note">Zone maritime #17 · relevé du <b data-draw="val" data-source="terr_resume" data-field="date" data-row="0" data-fmt="date">—</b>. Chaque point est un territoire, placé comme sur la carte du jeu ; sa taille indique le niveau.</p><p class="t-en note">Sea Zone #17 · survey of <b data-draw="val" data-source="terr_resume" data-field="date" data-row="0" data-fmt="date">—</b>. Each dot is a territory, placed as on the in-game map; its size shows its level.</p><p class="t-es note">Zona marítima #17 · registro del <b data-draw="val" data-source="terr_resume" data-field="date" data-row="0" data-fmt="date">—</b>. Cada punto es un territorio, situado como en el mapa del juego; su tamaño indica el nivel.</p>
     <div class="ev-tete">
-      <div class="card"><span class="kpi-l">Territoires</span><span class="kpi-v" data-draw="val" data-source="terr_resume" data-field="total" data-row="0" data-fmt="int">—</span><span class="kpi-d">sur la zone</span></div>
-      <div class="card"><span class="kpi-l">Le Refuge</span><span class="kpi-v" data-draw="val" data-source="terr_resume" data-field="rfg" data-row="0" data-fmt="int">—</span><span class="kpi-d">territoire(s) tenu(s)</span></div>
-      <div class="card"><span class="kpi-l">Alliés</span><span class="kpi-v" data-draw="val" data-source="terr_resume" data-field="allies" data-row="0" data-fmt="int">—</span><span class="kpi-d">1MP, ELF, AFR, Pos, RTD</span></div>
-      <div class="card"><span class="kpi-l">Autres alliances</span><span class="kpi-v" data-draw="val" data-source="terr_resume" data-field="autres" data-row="0" data-fmt="int">—</span><span class="kpi-d">territoires</span></div>
-      <div class="card"><span class="kpi-l">Libres</span><span class="kpi-v" data-draw="val" data-source="terr_resume" data-field="libres" data-row="0" data-fmt="int">—</span><span class="kpi-d">sans alliance</span></div>
+      <div class="card"><span class="kpi-l"><span class="t-fr">Territoires</span><span class="t-en">Territories</span><span class="t-es">Territorios</span></span><span class="kpi-v" data-draw="val" data-source="terr_resume" data-field="total" data-row="0" data-fmt="int">—</span><span class="kpi-d"><span class="t-fr">sur la zone</span><span class="t-en">in the zone</span><span class="t-es">en la zona</span></span></div>
+      <div class="card"><span class="kpi-l">Le Refuge</span><span class="kpi-v" data-draw="val" data-source="terr_resume" data-field="rfg" data-row="0" data-fmt="int">—</span><span class="kpi-d"><span class="t-fr">territoire(s) tenu(s)</span><span class="t-en">territories held</span><span class="t-es">territorio(s) ocupado(s)</span></span></div>
+      <div class="card"><span class="kpi-l"><span class="t-fr">Alliés</span><span class="t-en">Allies</span><span class="t-es">Aliados</span></span><span class="kpi-v" data-draw="val" data-source="terr_resume" data-field="allies" data-row="0" data-fmt="int">—</span><span class="kpi-d">1MP, ELF, AFR, Pos, RTD</span></div>
+      <div class="card"><span class="kpi-l"><span class="t-fr">Autres alliances</span><span class="t-en">Other alliances</span><span class="t-es">Otras alianzas</span></span><span class="kpi-v" data-draw="val" data-source="terr_resume" data-field="autres" data-row="0" data-fmt="int">—</span><span class="kpi-d"><span class="t-fr">territoires</span><span class="t-en">territories</span><span class="t-es">territorios</span></span></div>
+      <div class="card"><span class="kpi-l"><span class="t-fr">Libres</span><span class="t-en">Free</span><span class="t-es">Libres</span></span><span class="kpi-v" data-draw="val" data-source="terr_resume" data-field="libres" data-row="0" data-fmt="int">—</span><span class="kpi-d"><span class="t-fr">sans alliance</span><span class="t-en">no alliance</span><span class="t-es">sin alianza</span></span></div>
     </div>
     <div class="deux">
-      <div><h3>Carte de la zone</h3><div class="chart carte" data-draw="carte" data-source="territoires"></div></div>
-      <div><h3>Territoires par alliance</h3><div class="chart" data-draw="terr-barres" data-source="terr_alliances"></div></div>
+      <div><h3><span class="t-fr">Carte de la zone</span><span class="t-en">Zone map</span><span class="t-es">Mapa de la zona</span></h3><div class="chart carte" data-draw="carte" data-source="territoires"></div></div>
+      <div><h3><span class="t-fr">Territoires par alliance</span><span class="t-en">Territories by alliance</span><span class="t-es">Territorios por alianza</span></h3><div class="chart" data-draw="terr-barres" data-source="terr_alliances"></div></div>
     </div>
-    <h3 class="sous">Évolution du nombre de territoires</h3>
-    <p class="note" data-empty="terr_evol" hidden>La courbe apparaîtra dès le deuxième relevé de la carte.</p>
+    <h3 class="sous"><span class="t-fr">Évolution du nombre de territoires</span><span class="t-en">Territory count over time</span><span class="t-es">Evolución del número de territorios</span></h3>
+    <p class="note" data-empty="terr_evol" hidden><span class="t-fr">La courbe apparaîtra dès le deuxième relevé de la carte.</span><span class="t-en">The chart will appear from the second map survey.</span><span class="t-es">La curva aparecerá a partir del segundo registro del mapa.</span></p>
     <div class="chart" data-draw="terr-evol" data-source="terr_evol" data-evol hidden></div>
   </section>
 
   <section class="card">
-    <div class="cl-tete">
-      <h2 class="ancre" id="classement">Classement de la semaine</h2>
-      <select aria-label="Choisir une semaine" data-draw="cl-choix" data-source="classement" hidden></select>
+    <h2 class="ancre" id="technologies"><span class="t-fr">Technologies d'alliance</span><span class="t-en">Alliance technologies</span><span class="t-es">Tecnologías de la alianza</span></h2>
+<p class="t-fr note">Avancement des recherches de l'alliance (menu Alliance &gt; Tech) au relevé du <b data-draw="val" data-source="tech_resume" data-field="date" data-row="0" data-fmt="date">—</b>. 👍 : technologie recommandée par les officiers.</p><p class="t-en note">Progress of the alliance research (Alliance &gt; Tech menu) as of <b data-draw="val" data-source="tech_resume" data-field="date" data-row="0" data-fmt="date">—</b>. 👍: technology recommended by the officers.</p><p class="t-es note">Avance de las investigaciones de la alianza (menú Alianza &gt; Tec.) según el registro del <b data-draw="val" data-source="tech_resume" data-field="date" data-row="0" data-fmt="date">—</b>. 👍: tecnología recomendada por los oficiales.</p>
+    <div class="ev-tete">
+      <div class="card"><span class="kpi-l"><span class="t-fr">Terminées</span><span class="t-en">Completed</span><span class="t-es">Completadas</span></span><span class="kpi-v" data-draw="val" data-source="tech_resume" data-field="terminees" data-row="0" data-fmt="int">—</span><span class="kpi-d"><span class="t-fr">niveau maximum atteint</span><span class="t-en">max level reached</span><span class="t-es">nivel máximo alcanzado</span></span></div>
+      <div class="card"><span class="kpi-l"><span class="t-fr">En progression</span><span class="t-en">In progress</span><span class="t-es">En progreso</span></span><span class="kpi-v" data-draw="val" data-source="tech_resume" data-field="en_cours" data-row="0" data-fmt="int">—</span><span class="kpi-d"><span class="t-fr">niveaux en partie débloqués</span><span class="t-en">partly upgraded</span><span class="t-es">mejoradas en parte</span></span></div>
+      <div class="card"><span class="kpi-l"><span class="t-fr">À démarrer</span><span class="t-en">Not started</span><span class="t-es">Por empezar</span></span><span class="kpi-v" data-draw="val" data-source="tech_resume" data-field="disponibles" data-row="0" data-fmt="int">—</span><span class="kpi-d"><span class="t-fr">disponibles, niveau 0</span><span class="t-en">available, level 0</span><span class="t-es">disponibles, nivel 0</span></span></div>
+      <div class="card"><span class="kpi-l"><span class="t-fr">Verrouillées</span><span class="t-en">Locked</span><span class="t-es">Bloqueadas</span></span><span class="kpi-v" data-draw="val" data-source="tech_resume" data-field="verrouillees" data-row="0" data-fmt="int">—</span><span class="kpi-d"><span class="t-fr">prérequis manquants</span><span class="t-en">prerequisites missing</span><span class="t-es">faltan requisitos</span></span></div>
     </div>
-    <p class="note">Top 4 des membres hors R4 et R5, établi chaque vendredi sur 100 points. Clique sur un pseudo pour ouvrir sa fiche.</p>
-    <p class="cl-bareme"><span><i style="background:#f2c94c"></i>Progression de puissance · 40 pts</span><span><i style="background:#a985ff"></i>Piège Léviathan · 30 pts</span><span><i style="background:#40a0ff"></i>Guerre d'Oasis · 30 pts</span></p>
+    <div class="tech-grille" data-draw="tech" data-source="tech_dernier"></div>
+  </section>
+
+  <section class="card">
+    <div class="cl-tete">
+      <h2 class="ancre" id="classement"><span class="t-fr">Classement de la semaine</span><span class="t-en">Weekly ranking</span><span class="t-es">Clasificación semanal</span></h2>
+      <select aria-label="Choisir une semaine" data-aria-fr="Choisir une semaine" data-aria-en="Choose a week" data-aria-es="Elegir una semana" data-draw="cl-choix" data-source="classement" hidden></select>
+    </div>
+    <p class="note"><span class="t-fr">Top 4 des membres hors R4 et R5, établi chaque vendredi sur 100 points. Clique sur un pseudo pour ouvrir sa fiche.</span><span class="t-en">Top 4 members excluding R4 and R5, scored out of 100 every Friday. Click a name to open their profile.</span><span class="t-es">Top 4 de miembros sin contar R4 y R5, calculado cada viernes sobre 100 puntos. Haz clic en un nombre para abrir su ficha.</span></p>
+    <p class="cl-bareme"><span><i style="background:#f2c94c"></i><span class="t-fr">Progression de puissance</span><span class="t-en">Power growth</span><span class="t-es">Progreso de poder</span> · 40 pts</span><span><i style="background:#a985ff"></i><span class="t-fr">Piège Léviathan</span><span class="t-en">Leviathan Trap</span><span class="t-es">Trampa del Leviatán</span> · 30 pts</span><span><i style="background:#40a0ff"></i><span class="t-fr">Guerre d'Oasis</span><span class="t-en">Oasis War</span><span class="t-es">Guerra del Oasis</span> · 30 pts</span></p>
     <div class="ev-vue" data-draw="classement" data-source="classement membres"></div>
   </section>
 
   <section class="card">
-    <h2 class="ancre" id="technologies">Technologies d'alliance</h2>
-    <p class="note">Avancement des recherches de l'alliance, relevé dans Alliance &gt; Tech. En doré : la technologie recommandée par le jeu.</p>
-    <div class="ev-vue" data-draw="tech" data-source="tech"></div>
-  </section>
-
-  <section class="card">
-    <h2 class="ancre" id="evenements">Classements des événements</h2>
-    <p class="note">Classements officiels lus dans le courrier d'alliance du jeu (Piège Léviathan, Guerre d'Oasis).</p>
-    <div class="tools"><select class="rfg-ev-choix" aria-label="Choisir un événement" data-draw="ev-choix" data-source="ev_resume"></select></div>
+    <h2 class="ancre" id="evenements"><span class="t-fr">Classements des événements</span><span class="t-en">Event rankings</span><span class="t-es">Clasificaciones de eventos</span></h2>
+    <p class="note"><span class="t-fr">Classements officiels lus dans le courrier d'alliance du jeu (Piège Léviathan, Guerre d'Oasis).</span><span class="t-en">Official rankings read from the in-game alliance mail (Leviathan Trap, Oasis War).</span><span class="t-es">Clasificaciones oficiales leídas en el correo de alianza del juego (Trampa del Leviatán, Guerra del Oasis).</span></p>
+    <div class="tools"><select class="rfg-ev-choix" aria-label="Choisir un événement" data-aria-fr="Choisir un événement" data-aria-en="Choose an event" data-aria-es="Elegir un evento" data-draw="ev-choix" data-source="ev_resume"></select></div>
     <div class="ev-vue" data-draw="ev-vue" data-source="ev_resume evenements membres"></div>
   </section>
 
   <section class="card">
-    <h2 class="ancre" id="oasis">Guerre d'Oasis : inscrits et participants</h2>
-    <p class="note">Comparaison entre la liste des inscrits (courrier « Inscriptions clôturées ») et les membres ayant marqué des points d'Oasis pendant la bataille.</p>
+    <h2 class="ancre" id="oasis"><span class="t-fr">Guerre d'Oasis : inscrits et participants</span><span class="t-en">Oasis War: registered vs. participants</span><span class="t-es">Guerra del Oasis: inscritos y participantes</span></h2>
+    <p class="note"><span class="t-fr">Comparaison entre la liste des inscrits (courrier « Inscriptions clôturées ») et les membres ayant marqué des points d'Oasis pendant la bataille.</span><span class="t-en">Comparison between the registration list (“Registration closed” mail) and the members who scored Oasis points during the battle.</span><span class="t-es">Comparación entre la lista de inscritos (correo «Inscripciones cerradas») y los miembros que sumaron puntos del Oasis durante la batalla.</span></p>
     <div class="ev-vue" data-draw="oasis" data-source="oasis_ecart ev_resume membres"></div>
   </section>
-  <p class="pied">Relevé automatique chaque jour à 17h · Données lues dans l'écran Membres de l'alliance · Puissances arrondies à 0,1 M</p>
+  <p class="pied"><span class="t-fr">Relevé automatique chaque jour à 17h · Données lues dans l'écran Membres de l'alliance · Puissances arrondies à 0,1 M</span><span class="t-en">Automatic survey every day at 5 pm (Paris time) · Data read from the alliance Members screen · Power rounded to 0.1 M</span><span class="t-es">Registro automático cada día a las 17 h (hora de París) · Datos leídos en la pantalla Miembros de la alianza · Poder redondeado a 0,1 M</span></p>
 </div>
 
 <script>
+
+window.RFG_I18N = (() => {
+  const P = [
+    ['Échec du chargement', 'Failed to load', 'Error de carga'],
+    ['Premier relevé', 'First survey', 'Primer registro'],
+    [' depuis le relevé précédent', ' since the previous survey', ' desde el registro anterior'],
+    ['Avant', 'Before', 'Antes'], ['Après', 'After', 'Después'],
+    ['Moins de 24 h', 'Under 24 h', 'Menos de 24 h'], ['1 à 3 jours', '1 to 3 days', '1 a 3 días'], ['3 à 7 jours', '3 to 7 days', '3 a 7 días'],
+    ['7 à 30 jours', '7 to 30 days', '7 a 30 días'], ['Plus de 30 jours', 'Over 30 days', 'Más de 30 días'],
+    ['Actif', 'Active', 'Activo'], ['À surveiller', 'To watch', 'A vigilar'], ['Absent', 'Absent', 'Ausente'],
+    ['En ligne', 'Online', 'En línea'], ['j', 'd', 'd'], ['1 mois et +', '1 month +', '1 mes o más'],
+    ['Arrivée', 'Arrival', 'Llegada'], ['Départ', 'Departure', 'Salida'],
+    ['Date', 'Date', 'Fecha'], [' (alliance)', ' (alliance)', ' (alianza)'],
+    ['Dégâts infligés', 'Damage dealt', 'Daño infligido'], ["Points d'Oasis", 'Oasis points', 'Puntos del Oasis'],
+    ['Participants', 'Participants', 'Participantes'], ['sur', 'out of', 'de'], ['inscrits', 'registered', 'inscritos'],
+    ['des', 'of the', 'de los'], ['membres actuels', 'current members', 'miembros actuales'],
+    ['Résultat', 'Result', 'Resultado'], ['Victoire', 'Victory', 'Victoria'], ['Défaite', 'Defeat', 'Derrota'],
+    ['contre', 'vs', 'contra'], ['à', 'to', 'a'], ['palier', 'tier', 'nivel'],
+    ['Meilleur score', 'Top score', 'Mejor puntuación'], ['Rang', 'Rank', 'Rango'], ['Membre', 'Member', 'Miembro'],
+    ['Rang alliance', 'Alliance rank', 'Rango en la alianza'], ['Puissance actuelle', 'Current power', 'Poder actual'],
+    [' (a quitté l’alliance)', ' (left the alliance)', ' (dejó la alianza)'],
+    ["Aucune Guerre d'Oasis relevée pour l'instant.", 'No Oasis War recorded yet.', 'Todavía no se ha registrado ninguna Guerra del Oasis.'],
+    ['Inscrits', 'Registered', 'Inscritos'], ['Ont participé', 'Took part', 'Participaron'], ['ont marqué des points', 'scored points', 'sumaron puntos'],
+    ['Taux de présence', 'Attendance rate', 'Tasa de asistencia'], ['des inscrits', 'of those registered', 'de los inscritos'],
+    ['Inscrits absents', 'Registered but absent', 'Inscritos ausentes'], ['inscrits sans aucun point', 'registered, no points', 'inscritos sin ningún punto'],
+    ['Personne.', 'Nobody.', 'Nadie.'], ['Puissance', 'Power', 'Poder'], ['Dernière connexion', 'Last login', 'Última conexión'],
+    ['Présents', 'Present', 'Presentes'], [' (non inscrit)', ' (not registered)', ' (no inscrito)'],
+    ['Semaine du', 'Week of', 'Semana del'],
+    ['Le premier classement sera publié vendredi.', 'The first ranking will be published on Friday.', 'La primera clasificación se publicará el viernes.'],
+    ['Léviathan', 'Leviathan', 'Leviatán'], ['Oasis', 'Oasis', 'Oasis'], ['Puissance :', 'Power:', 'Poder:'],
+    [' sur la semaine', ' over the week', ' en la semana'], ['Phare', 'Beacon', 'Faro'], ['Éliminations', 'Kills', 'Eliminaciones'],
+    ['Badge', 'Badge', 'Insignia'], ['niv.', 'lv.', 'niv.'], ['Popularité', 'Popularity', 'Popularidad'],
+    ['Arche', 'Ark', 'Arca'], ['Arche Suprême', 'Supreme Ark', 'Arca Suprema'], ['Libre', 'Free', 'Libre'], ['Allié', 'Ally', 'Aliado'],
+    ['Autre alliance', 'Other alliance', 'Otra alianza'], ['niveau', 'level', 'nivel'], ['Contour doré : allié', 'Gold outline: ally', 'Contorno dorado: aliado'],
+    ['Village de Pêcheurs', 'Fishing Village', 'Aldea de Pescadores'], ['Port logistique', 'Logistics Port', 'Puerto Logístico'],
+    ['Usine chimique', 'Chemical Plant', 'Planta Química'], ['Station de comms', 'Comms Station', 'Estación de Comunicaciones'],
+    ['Armurerie', 'Armory', 'Armería'], ['Base aérienne', 'Air Base', 'Base Aérea'], ['Base de missiles', 'Missile Base', 'Base de Misiles'],
+    ['Base Navale', 'Naval Base', 'Base Naval'],
+    ['Inscrit et présent', 'Registered & present', 'Inscrito y presente'], ['Inscrit absent', 'Registered, absent', 'Inscrito ausente'],
+    ['Présent sans inscription', 'Present, not registered', 'Presente sin inscripción'], ['Non inscrit', 'Not registered', 'No inscrito'],
+    ['Classé', 'Ranked', 'Clasificado'], ['Absent du classement', 'Not ranked', 'Fuera de la clasificación'],
+    ['⏳ Préparation…', '⏳ Preparing…', '⏳ Preparando…'],
+    ["L'export en image n'a pas pu se faire. Réessaie, ou fais une capture d'écran de la fiche.", 'The image export failed. Try again, or take a screenshot of the profile.', 'No se pudo exportar la imagen. Inténtalo de nuevo o haz una captura de pantalla de la ficha.'],
+    ['Croissance', 'Growth', 'Crecimiento'], ['Territoire', 'Territory', 'Territorio'], ['Guerre', 'War', 'Guerra'],
+    ['terminées', 'completed', 'completadas'], ['Pas encore de relevé des technologies.', 'No technology survey yet.', 'Todavía no hay registro de tecnologías.'],
+    ['Recommandée par les officiers', 'Recommended by the officers', 'Recomendada por los oficiales'],
+    ["Extension d'Alliance", 'Alliance Expansion', 'Expansión de la Alianza'], ['Construction Rapide', 'Rapid Construction', 'Construcción Rápida'],
+    ['Extension du Territoire', 'Territory Expansion', 'Expansión del Territorio'], ['Pacte Amical', 'Friendship Pact', 'Pacto Amistoso'],
+    ['Recherche Efficace', 'Efficient Research', 'Investigación Eficiente'], ["Accélération d'Entraînement", 'Training Acceleration', 'Aceleración de Entrenamiento'],
+    ['Trousse de Soins', 'Medical Kit', 'Botiquín'], ['Récolte Rapide', 'Rapid Harvesting', 'Cosecha Rápida'],
+    ['Bûcheronnage Rapide', 'Rapid Logging', 'Tala Rápida'], ['Minage Rapide', 'Rapid Mining', 'Minería Rápida'], ['Forage Rapide', 'Rapid Drilling', 'Perforación Rápida'],
+    ["Soutien d'Attaque", 'Attack Support', 'Apoyo de Ataque'], ['Marche Rapide', 'Rapid March', 'Marcha Rápida'],
+    ['Soutien de Défense', 'Defense Support', 'Apoyo de Defensa'], ['Chasseur de Léviathan', 'Leviathan Hunter', 'Cazador de Leviatanes'],
+    ['Soutien de Létalité', 'Lethality Support', 'Apoyo de Letalidad'], ['Soutien de PV', 'HP Support', 'Apoyo de PV'],
+    ['Assaut Conjoint', 'Joint Assault', 'Asalto Conjunto'], ['Prouesse Martiale', 'Martial Prowess', 'Destreza Marcial'],
+    ['Assaut des Cavaliers', 'Cavalry Assault', 'Asalto de Caballería'], ["Maîtrise du Tir à l'Arc", 'Archery Mastery', 'Maestría en Tiro con Arco'],
+    ['Amélioration de Puissance de Feu', 'Firepower Upgrade', 'Mejora de Potencia de Fuego'], ['Armure Renforcée', 'Reinforced Armor', 'Armadura Reforzada'],
+    ['Armure Légère', 'Light Armor', 'Armadura Ligera'], ['Bouclier Furtif', 'Stealth Shield', 'Escudo Sigiloso'],
+    ['Rocher Inébranlable', 'Unshakable Rock', 'Roca Inquebrantable'], ['Entaille Lourde', 'Heavy Slash', 'Tajo Pesado'],
+    ['Ruée en Hors-bord', 'Speedboat Rush', 'Embestida en Lancha'], ['Munitions hautement explosives', 'High-Explosive Ammo', 'Munición Altamente Explosiva'],
+    ['Tout Écraser', 'Crush All', 'Aplastarlo Todo'], ['Physique Robuste', 'Robust Physique', 'Físico Robusto'],
+    ['Maîtrise Aquatique', 'Aquatic Mastery', 'Maestría Acuática'], ['Volonté Inébranlable', 'Unbreakable Will', 'Voluntad Inquebrantable'],
+    ['Constitution Robuste', 'Sturdy Constitution', 'Constitución Robusta'], ['Durabilité', 'Durability', 'Durabilidad'],
+  ];
+  const en = {}, es = {};
+  for (const [f, e, s] of P) { en[f] = e; es[f] = s; }
+  const re = {
+    en: [[/^Piège Léviathan du (\d\d\/\d\d)$/, (d) => 'Leviathan Trap – ' + d], [/^Guerre d'Oasis du (\d\d\/\d\d) \(Légion (\d)\)$/, (d, n) => 'Oasis War – ' + d + ' (Legion ' + n + ')']],
+    es: [[/^Piège Léviathan du (\d\d\/\d\d)$/, (d) => 'Trampa del Leviatán del ' + d], [/^Guerre d'Oasis du (\d\d\/\d\d) \(Légion (\d)\)$/, (d, n) => 'Guerra del Oasis del ' + d + ' (Legión ' + n + ')']],
+  };
+  return {en, es, re};
+})();
+
 const RFG_C = {or: '#f2c94c', violet: '#6a3fd1', violetClair: '#a985ff', texte: '#eaf2ff', muet: '#9fb6d6', axe: 'rgba(242,201,76,.35)', nuit: '#0b1f3a'};
 
 dash.calc('instantanes', {
@@ -513,16 +612,31 @@ dash.calc('mouvements', {
 
 
 window.rfg = (() => {
-  const fr = d3.formatLocale({decimal: ',', thousands: ' ', grouping: [3], currency: ['', ' €']});
-  const int = fr.format(',d');
-  const m1 = fr.format(',.1f');
-  const md = fr.format(',.2f');
+  const LOC = {fr: {d: ',', t: '\u202f', md: ' Md', date: 'fr-FR'}, en: {d: '.', t: ',', md: ' B', date: 'en-GB'}, es: {d: ',', t: '.', md: ' MM', date: 'es-ES'}};
+  const lang = () => { const l = dash.params().lang; return LOC[l] ? l : 'fr'; };
+  const cache = {};
+  const F = () => {
+    const l = lang();
+    if (!cache[l]) { const loc = d3.formatLocale({decimal: LOC[l].d, thousands: LOC[l].t, grouping: [3], currency: ['', '']}); cache[l] = {int: loc.format(',d'), m1: loc.format(',.1f'), md: loc.format(',.2f')}; }
+    return cache[l];
+  };
   const fmt = (v, f) => v == null || isNaN(v) ? '—' :
-    f === 'md' ? md(v / 1e9) + ' Md' : f === 'm' ? m1(v / 1e6) + ' M' : int(v);
+    f === 'md' ? F().md(v / 1e9) + LOC[lang()].md : f === 'm' ? F().m1(v / 1e6) + ' M' : F().int(v);
   const signed = (v, f) => (v > 0 ? '+' : v < 0 ? '−' : '±') + fmt(Math.abs(v), f);
-  const dateFr = (s) => { const d = new Date(s + 'T00:00:00Z'); return isNaN(d) ? s : d.toLocaleDateString('fr-FR', {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'}); };
-  const depuis = (h) => h === 0 ? 'En ligne' : h < 1 ? Math.round(h * 60) + ' min' : h < 24 ? Math.round(h) + ' h' : h < 720 ? Math.round(h / 24) + ' j' : '1 mois et +';
-  return {fmt, signed, dateFr, depuis, sort: {col: 'puissance', dir: -1}};
+  const dateFr = (s) => { const d = new Date(s + 'T00:00:00Z'); return isNaN(d) ? s : d.toLocaleDateString(LOC[lang()].date, {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'}); };
+  const t = (s) => {
+    const l = lang();
+    if (l === 'fr' || s == null || s === '') return s;
+    const D = RFG_I18N[l];
+    if (D[s] != null) return D[s];
+    const n = String(s).match(/^(.+?) (I{1,3})$/);
+    if (n && D[n[1]] != null) return D[n[1]] + ' ' + n[2];
+    for (const [re, f] of RFG_I18N.re[l]) { const m = String(s).match(re); if (m) return f(...m.slice(1)); }
+    return s;
+  };
+  const depuis = (h) => h === 0 ? t('En ligne') : h < 1 ? Math.round(h * 60) + ' min' : h < 24 ? Math.round(h) + ' h' : h < 720 ? Math.round(h / 24) + ' ' + t('j') : t('1 mois et +');
+  const actif = (sel) => { const all = [...document.querySelectorAll(sel)]; return all.find((n) => n.classList.contains('t-' + lang())) || all[0]; };
+  return {fmt, signed, dateFr, depuis, t, lang, actif, sort: {col: 'puissance', dir: -1}};
 })();
 
 const rfgFail = (el) => {
@@ -531,7 +645,7 @@ const rfgFail = (el) => {
   s.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:.4rem;min-height:inherit;color:#9fb6d6;font-size:var(--cds-font-size-caption)';
   const dot = document.createElement('i');
   dot.style.cssText = 'width:.375rem;height:.375rem;border-radius:50%;background:var(--color-bad)';
-  s.append(dot, document.createTextNode('Échec du chargement'));
+  s.append(dot, document.createTextNode(rfg.t('Échec du chargement')));
   el.append(s);
 };
 
@@ -552,10 +666,10 @@ dash.draw('delta', (el) => {
   el.classList.remove('up', 'down');
   if (g.status !== 'ok' || !g.data[0]) { el.textContent = '—'; return; }
   const v = g.data[0][el.dataset.field];
-  if (v == null) { el.textContent = 'Premier relevé'; return; }
+  if (v == null) { el.textContent = rfg.t('Premier relevé'); return; }
   const good = el.dataset.inverse ? v < 0 : v > 0, bad = el.dataset.inverse ? v > 0 : v < 0;
   if (good) el.classList.add('up'); if (bad) el.classList.add('down');
-  el.textContent = rfg.signed(v, el.dataset.fmt) + ' depuis le relevé précédent';
+  el.textContent = rfg.signed(v, el.dataset.fmt) + rfg.t(' depuis le relevé précédent');
 });
 
 dash.draw('serie', (el) => {
@@ -567,7 +681,7 @@ dash.draw('serie', (el) => {
   const rows = g.data, f = el.dataset.field, fm = el.dataset.fmt;
   const W = Math.max(240, el.clientWidth), H = 180, ml = 8, mr = 8, mt = 24, mb = 28;
   const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).style('display', 'block');
-  const lab = (r) => rfg.dateFr(r.date) + (r.releve !== 'Hebdo' ? ' · ' + r.releve + ' ' + r.evenement : '');
+  const lab = (r) => rfg.dateFr(r.date) + (r.releve !== 'Hebdo' ? ' · ' + rfg.t(r.releve) + ' ' + r.evenement : '');
   const x = d3.scalePoint(rows.map((r) => r.cle), [ml + 40, W - mr - 40]).padding(rows.length === 1 ? 0.5 : 0);
   const ext = d3.extent(rows, (r) => r[f]);
   const pad = (ext[1] - ext[0]) * 0.15 || Math.abs(ext[1]) * 0.1 || 1;
@@ -609,7 +723,7 @@ dash.draw('barres', (el) => {
   const rows = g.data, W = Math.max(240, el.clientWidth), bh = 22, gap = 10, H = rows.length * (bh + gap);
   const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).style('display', 'block');
   const labels = svg.selectAll('text.l').data(rows).join('text').attr('class', 'l').attr('x', 0).attr('y', (r, i) => i * (bh + gap) + bh / 2 + 4)
-    .style('fill', RFG_C.texte).style('font-size', 'var(--cds-font-size-caption)').text((r) => r[lk]);
+    .style('fill', RFG_C.texte).style('font-size', 'var(--cds-font-size-caption)').text((r) => rfg.t(r[lk]));
   const lw = d3.max(labels.nodes(), (n) => n.getComputedTextLength()) + 10;
   const extra = (r) => int(r.valeur) + (r.puissance != null ? ' · ' + rfg.fmt(r.puissance, 'm') : '');
   const int = (v) => rfg.fmt(v, 'int');
@@ -632,8 +746,8 @@ dash.draw('table', (tb) => {
   const g = dash.data('membres');
   tb.replaceChildren();
   if (g.status !== 'ok') return;
-  const q = (document.querySelector('.rfg-search')?.value || '').toLowerCase();
-  const st = document.querySelector('.rfg-filtre')?.value || '';
+  const q = (rfg.actif('.rfg-search')?.value || '').toLowerCase();
+  const st = rfg.actif('.rfg-filtre')?.value || '';
   const {col, dir} = rfg.sort;
   const rows = g.data.filter((r) => (!q || r.membre.toLowerCase().includes(q)) && (!st || r.statut === st))
     .sort((a, b) => {
@@ -650,7 +764,7 @@ dash.draw('table', (tb) => {
     if (r.variation > 0) v.className = 'num up'; else if (r.variation < 0) v.className = 'num down';
     rfgCell(tr, rfg.fmt(r.niveau, 'int'), 'num hide-n'); rfgCell(tr, rfg.depuis(r.connexion_h), 'hide-n');
     const td = rfgCell(tr, ''); const p = document.createElement('span');
-    p.className = 'pill ' + (r.statut === 'Absent' ? 'bad' : r.statut === 'À surveiller' ? 'warn' : 'ok'); p.textContent = r.statut; td.append(p);
+    p.className = 'pill ' + (r.statut === 'Absent' ? 'bad' : r.statut === 'À surveiller' ? 'warn' : 'ok'); p.textContent = rfg.t(r.statut); td.append(p);
     tb.append(tr);
   }
 });
@@ -659,7 +773,7 @@ dash.draw('mouv', (tb) => {
   const g = dash.data('mouvements');
   tb.replaceChildren();
   if (g.status !== 'ok') return;
-  for (const r of g.data) { const tr = document.createElement('tr'); rfgCell(tr, r.mouvement).className = r.mouvement === 'Arrivée' ? 'up' : 'down'; rfgCell(tr, r.membre); rfgCell(tr, r.rang); rfgCell(tr, rfg.fmt(r.puissance, 'm'), 'num'); tb.append(tr); }
+  for (const r of g.data) { const tr = document.createElement('tr'); rfgCell(tr, rfg.t(r.mouvement)).className = r.mouvement === 'Arrivée' ? 'up' : 'down'; rfgCell(tr, r.membre); rfgCell(tr, r.rang); rfgCell(tr, rfg.fmt(r.puissance, 'm'), 'num'); tb.append(tr); }
 });
 
 
@@ -685,7 +799,7 @@ const rfgNb = (v) => rfg.fmt(v, 'int');
 dash.draw('ev-choix', (sel) => {
   const g = dash.data('ev_resume');
   const res = g.status === 'ok' ? [...g.data].sort((a, b) => a.date < b.date ? 1 : -1) : [];
-  sel.replaceChildren(...res.map((r) => new Option(r.titre, r.evenement)));
+  sel.replaceChildren(...res.map((r) => new Option(rfg.t(r.titre), r.evenement)));
   const c = res.length ? rfgEvChoisi(res) : null;
   if (c) sel.value = c.evenement;
   sel.onchange = () => { rfgEv.choix = sel.value; dash.draw('ev-vue'); dash.draw('oasis'); };
@@ -701,26 +815,26 @@ dash.draw('ev-vue', (el) => {
   const rows = ge.data.filter((r) => r.evenement === ev.evenement && r.participe).sort((a, b) => a.classement - b.classement);
   const mem = new Map((gm.status === 'ok' ? gm.data : []).map((m) => [m.membre, m]));
   const tete = rfgEl('div', 'ev-tete');
-  tete.append(rfgTuile('Date', rfg.dateFr(ev.date)));
-  tete.append(rfgTuile(ev.unite + ' (alliance)', rfgNb(ev.total)));
+  tete.append(rfgTuile(rfg.t('Date'), rfg.dateFr(ev.date)));
+  tete.append(rfgTuile(rfg.t(ev.unite) + rfg.t(' (alliance)'), rfgNb(ev.total)));
   const nbMem = mem.size || null;
-  tete.append(rfgTuile('Participants', rfgNb(ev.participants), ev.inscrits ? 'sur ' + ev.inscrits + ' inscrits' : nbMem ? Math.round(ev.participants / nbMem * 100) + ' % des ' + nbMem + ' membres actuels' : null));
+  tete.append(rfgTuile(rfg.t('Participants'), rfgNb(ev.participants), ev.inscrits ? rfg.t('sur') + ' ' + ev.inscrits + ' ' + rfg.t('inscrits') : nbMem ? Math.round(ev.participants / nbMem * 100) + ' % ' + rfg.t('des') + ' ' + nbMem + ' ' + rfg.t('membres actuels') : null));
   if (ev.resultat) {
-    const t = rfgTuile('Résultat', ev.resultat, 'contre ' + ev.adversaire + ' · ' + rfgNb(ev.score_alliance) + ' à ' + rfgNb(ev.score_adverse) + (ev.palier ? ' · palier ' + ev.palier : ''));
+    const t = rfgTuile(rfg.t('Résultat'), rfg.t(ev.resultat), rfg.t('contre') + ' ' + ev.adversaire + ' · ' + rfgNb(ev.score_alliance) + ' ' + rfg.t('à') + ' ' + rfgNb(ev.score_adverse) + (ev.palier ? ' · ' + rfg.t('palier') + ' ' + ev.palier : ''));
     t.querySelector('.kpi-v').classList.add(ev.resultat === 'Victoire' ? 'vic' : 'def');
     tete.append(t);
   }
-  if (rows[0]) tete.append(rfgTuile('Meilleur score', rows[0].membre, rfgNb(rows[0].score)));
+  if (rows[0]) tete.append(rfgTuile(rfg.t('Meilleur score'), rows[0].membre, rfgNb(rows[0].score)));
   el.append(tete);
   const box = rfgEl('div', 'tbox'), t = rfgEl('table'), th = rfgEl('thead'), hr = rfgEl('tr');
-  [['Rang', ''], ['Membre', ''], [ev.unite, 'num'], ['', 'hide-n'], ['Rang alliance', 'hide-n'], ['Puissance actuelle', 'num hide-n']].forEach(([h, c]) => hr.append(rfgEl('th', c, h)));
+  [['Rang', ''], ['Membre', ''], [ev.unite, 'num'], ['', 'hide-n'], ['Rang alliance', 'hide-n'], ['Puissance actuelle', 'num hide-n']].forEach(([h, c]) => hr.append(rfgEl('th', c, rfg.t(h))));
   th.append(hr); t.append(th);
   const tb = rfgEl('tbody'), max = rows.length ? rows[0].score : 1;
   for (const r of rows) {
     const tr = rfgEl('tr'), m = mem.get(r.membre);
     if (r.membre === 'Pulpeorange') tr.className = 'moi';
     const c0 = rfgEl('td'); c0.append(rfgEl('span', 'medaille' + (r.classement <= 3 ? ' m' + r.classement : ''), String(r.classement))); tr.append(c0);
-    tr.append(rfgEl('td', '', r.membre + (m ? '' : ' (a quitté l’alliance)')));
+    tr.append(rfgEl('td', '', r.membre + (m ? '' : rfg.t(' (a quitté l’alliance)'))));
     tr.append(rfgEl('td', 'num', rfgNb(r.score)));
     const cb = rfgEl('td', 'hide-n'); const b = rfgEl('div', 'barre'); b.style.width = Math.max(2, r.score / max * 100) + '%'; b.style.minWidth = '2px'; cb.style.width = '22%'; cb.append(b); tr.append(cb);
     tr.append(rfgEl('td', 'hide-n', m ? m.rang : '—'));
@@ -737,29 +851,29 @@ dash.draw('oasis', (el) => {
   if (go.status === 'error' || gr.status === 'error') return rfgFail(el);
   if (go.status !== 'ok' || gr.status !== 'ok') return;
   const oas = gr.data.filter((r) => r.type === "Guerre d'Oasis").sort((a, b) => a.date < b.date ? 1 : -1);
-  if (!oas.length) { el.append(rfgEl('p', 'vide', "Aucune Guerre d'Oasis relevée pour l'instant.")); return; }
+  if (!oas.length) { el.append(rfgEl('p', 'vide', rfg.t("Aucune Guerre d'Oasis relevée pour l'instant."))); return; }
   const ev = oas.find((r) => r.evenement === rfgEv.choix) || oas[0];
   const rows = go.data.filter((r) => r.evenement === ev.evenement);
   const mem = new Map((gm.status === 'ok' ? gm.data : []).map((m) => [m.membre, m]));
   const pres = rows.filter((r) => r.statut === 'Inscrit et présent'), abs = rows.filter((r) => r.statut === 'Inscrit absent'), hors = rows.filter((r) => r.statut === 'Présent sans inscription');
   const ins = pres.length + abs.length;
-  el.append(rfgEl('p', 'note', ev.titre));
+  el.append(rfgEl('p', 'note', rfg.t(ev.titre)));
   const tete = rfgEl('div', 'ev-tete');
-  tete.append(rfgTuile('Inscrits', rfgNb(ins)));
-  tete.append(rfgTuile('Ont participé', rfgNb(pres.length + hors.length), 'ont marqué des points'));
-  const taux = rfgTuile('Taux de présence', ins ? Math.round(pres.length / ins * 100) + ' %' : '—', 'des inscrits');
+  tete.append(rfgTuile(rfg.t('Inscrits'), rfgNb(ins)));
+  tete.append(rfgTuile(rfg.t('Ont participé'), rfgNb(pres.length + hors.length), rfg.t('ont marqué des points')));
+  const taux = rfgTuile(rfg.t('Taux de présence'), ins ? Math.round(pres.length / ins * 100) + ' %' : '—', rfg.t('des inscrits'));
   if (ins && pres.length / ins < 0.7) taux.querySelector('.kpi-v').classList.add('def');
   tete.append(taux);
-  const ta = rfgTuile('Inscrits absents', rfgNb(abs.length), 'inscrits sans aucun point');
+  const ta = rfgTuile(rfg.t('Inscrits absents'), rfgNb(abs.length), rfg.t('inscrits sans aucun point'));
   if (abs.length) ta.querySelector('.kpi-v').classList.add('def');
   tete.append(ta);
   el.append(tete);
   const deux = rfgEl('div', 'deux');
   const liste = (titre, rs, cols) => {
-    const w = rfgEl('div'); w.append(rfgEl('h3', '', titre + ' (' + rs.length + ')'));
-    if (!rs.length) { w.append(rfgEl('p', 'vide', 'Personne.')); return w; }
+    const w = rfgEl('div'); w.append(rfgEl('h3', '', rfg.t(titre) + ' (' + rs.length + ')'));
+    if (!rs.length) { w.append(rfgEl('p', 'vide', rfg.t('Personne.'))); return w; }
     const box = rfgEl('div', 'tbox'), t = rfgEl('table'), th = rfgEl('thead'), hr = rfgEl('tr');
-    cols.forEach(([h, c]) => hr.append(rfgEl('th', c, h))); th.append(hr); t.append(th);
+    cols.forEach(([h, c]) => hr.append(rfgEl('th', c, rfg.t(h)))); th.append(hr); t.append(th);
     const tb = rfgEl('tbody');
     for (const r of rs) {
       const tr = rfgEl('tr'), m = mem.get(r.membre);
@@ -772,7 +886,7 @@ dash.draw('oasis', (el) => {
   deux.append(liste('Inscrits absents', abs.sort((a, b) => (mem.get(b.membre)?.puissance || 0) - (mem.get(a.membre)?.puissance || 0)), [
     ['Membre', '', (r) => r.membre], ['Rang', '', (r, m) => m ? m.rang : '—'], ['Puissance', 'num', (r, m) => m ? rfg.fmt(m.puissance, 'm') : '—'], ['Dernière connexion', 'hide-n', (r, m) => m ? rfg.depuis(m.connexion_h) : '—']]));
   deux.append(liste('Présents', [...pres, ...hors].sort((a, b) => a.classement - b.classement), [
-    ['Rang', '', (r) => String(r.classement)], ['Membre', '', (r) => r.membre + (r.statut === 'Présent sans inscription' ? ' (non inscrit)' : '')], ["Points d'Oasis", 'num', (r) => rfgNb(r.score)]]));
+    ['Rang', '', (r) => String(r.classement)], ['Membre', '', (r) => r.membre + (r.statut === 'Présent sans inscription' ? rfg.t(' (non inscrit)') : '')], ["Points d'Oasis", 'num', (r) => rfgNb(r.score)]]));
   el.append(deux);
 });
 
@@ -784,56 +898,10 @@ const rfgClSemaines = () => {
 dash.draw('cl-choix', (sel) => {
   const s = rfgClSemaines();
   sel.hidden = s.length < 2;
-  sel.replaceChildren(...s.map((d) => new Option('Semaine du ' + rfg.dateFr(d), d)));
+  sel.replaceChildren(...s.map((d) => new Option(rfg.t('Semaine du') + ' ' + rfg.dateFr(d), d)));
   if (s.length) sel.value = s.includes(rfgCl.semaine) ? rfgCl.semaine : s[0];
   sel.onchange = () => { rfgCl.semaine = sel.value; dash.draw('classement'); };
 });
-dash.draw('tech', (el) => {
-  const g = dash.data('tech');
-  el.replaceChildren();
-  el.classList.toggle('dash-skeleton', g.status === 'loading');
-  if (g.status === 'error') return rfgFail(el);
-  if (g.status !== 'ok') return;
-  if (!g.data.length) { el.append(rfgEl('p', 'vide', 'Pas encore de relevé des technologies.')); return; }
-  const date = g.data.map((r) => r.date).sort().pop();
-  const rows = g.data.filter((r) => r.date === date).sort((a, b) => a.ordre - b.ordre);
-  el.append(rfgEl('p', 'note', 'Relevé du ' + rfg.dateFr(date)));
-  const ordreStatut = {'En cours': 0, 'Disponible': 1, 'Verrouillée': 2};
-  const grille = rfgEl('div', 'tk-grille');
-  for (const b of ['Croissance', 'Territoire', 'Guerre']) {
-    const t = rows.filter((r) => r.branche === b);
-    if (!t.length) continue;
-    const faites = t.filter((r) => r.statut === 'Terminée');
-    const col = rfgEl('div', 'tk-col');
-    const tete = rfgEl('div', 'tk-tete');
-    tete.append(rfgEl('h3', '', b), rfgEl('span', '', faites.length + ' / ' + t.length + ' terminées'));
-    const barre = rfgEl('div', 'tk-barre'), f = rfgEl('span'); f.style.width = (faites.length / t.length * 100) + '%'; barre.append(f);
-    col.append(tete, barre);
-    const reste = t.filter((r) => r.statut !== 'Terminée').sort((x, y) => (y.recommandee - x.recommandee) || (ordreStatut[x.statut] - ordreStatut[y.statut]) || (x.ordre - y.ordre));
-    if (reste.length) {
-      const ul = rfgEl('ul', 'tk-liste');
-      for (const r of reste) {
-        const li = rfgEl('li', 'tk-ligne' + (r.statut === 'Verrouillée' ? ' verrou' : '') + (r.recommandee ? ' reco' : ''));
-        const nom = rfgEl('span', 'nom', r.technologie);
-        if (r.recommandee) nom.append(rfgEl('span', 'tk-badge', 'Recommandée'));
-        li.append(nom, rfgEl('span', 'niv', (r.statut === 'Verrouillée' ? '🔒 ' : '') + (r.affichage || '')));
-        const mini = rfgEl('div', 'mini'), m = rfgEl('span');
-        m.style.width = (r.niveau_max ? Math.min(100, (r.niveau || 0) / r.niveau_max * 100) : 0) + '%';
-        mini.append(m); li.append(mini); ul.append(li);
-      }
-      col.append(ul);
-    }
-    if (faites.length) {
-      const d = rfgEl('details', 'tk-faites');
-      d.append(rfgEl('summary', '', faites.length + ' technologie' + (faites.length > 1 ? 's' : '') + ' au maximum'));
-      const ul = rfgEl('ul'); for (const r of faites) ul.append(rfgEl('li', '', r.technologie)); d.append(ul);
-      col.append(d);
-    }
-    grille.append(col);
-  }
-  el.append(grille);
-});
-
 dash.draw('classement', (el) => {
   const g = dash.data('classement'), gm = dash.data('membres');
   el.replaceChildren();
@@ -841,11 +909,11 @@ dash.draw('classement', (el) => {
   if (g.status === 'error') return rfgFail(el);
   if (g.status !== 'ok') return;
   const s = rfgClSemaines();
-  if (!s.length) { el.append(rfgEl('p', 'vide', 'Le premier classement sera publié vendredi.')); return; }
+  if (!s.length) { el.append(rfgEl('p', 'vide', rfg.t('Le premier classement sera publié vendredi.'))); return; }
   const sem = s.includes(rfgCl.semaine) ? rfgCl.semaine : s[0];
   const rows = g.data.filter((r) => r.semaine === sem).sort((a, b) => a.classement - b.classement);
   const mem = new Map((gm.status === 'ok' ? gm.data : []).map((m) => [m.membre, m]));
-  el.append(rfgEl('p', 'note', 'Semaine du ' + rfg.dateFr(sem)));
+  el.append(rfgEl('p', 'note', rfg.t('Semaine du') + ' ' + rfg.dateFr(sem)));
   const m1 = (v) => rfg.fmt(v, 'm'), dec = (v) => v == null ? '—' : String(v).replace('.', ',');
   const parts = [['Puissance', 'pts_puissance', 40, '#f2c94c'], ['Léviathan', 'pts_leviathan', 30, '#a985ff'], ['Oasis', 'pts_oasis', 30, '#40a0ff']];
   const grille = rfgEl('div', 'cl-grille');
@@ -864,16 +932,16 @@ dash.draw('classement', (el) => {
     c.append(pile);
     const det = rfgEl('div', 'cl-det');
     for (const [lbl, k, max, col] of parts) {
-      det.append(rfgEl('span', 'lbl', lbl));
+      det.append(rfgEl('span', 'lbl', rfg.t(lbl)));
       const sb = rfgEl('div', 'sous-barre'), f = rfgEl('span'); f.style.width = Math.min(100, (Number(r[k]) || 0) / max * 100) + '%'; f.style.background = col; sb.append(f); det.append(sb);
       det.append(rfgEl('span', 'val', dec(r[k]) + ' / ' + max));
     }
     c.append(det);
-    if (r.gain_puissance != null) c.append(rfgEl('div', 'cl-sous', 'Puissance : ' + rfg.signed(r.gain_puissance, 'm') + (r.gain_pct != null ? ' (' + (r.gain_pct > 0 ? '+' : '') + dec(r.gain_pct) + ' %)' : '') + ' sur la semaine'));
+    if (r.gain_puissance != null) c.append(rfgEl('div', 'cl-sous', rfg.t('Puissance :') + ' ' + rfg.signed(r.gain_puissance, 'm') + (r.gain_pct != null ? ' (' + (r.gain_pct > 0 ? '+' : '') + dec(r.gain_pct) + ' %)' : '') + rfg.t(' sur la semaine')));
     const f = r.fiche || {};
     const fiche = rfgEl('div', 'cl-fiche');
-    const puce = (l, v) => { if (v == null || v === '') return; const p = rfgEl('span'); p.append(l + ' '); p.append(rfgEl('b', '', String(v))); fiche.append(p); };
-    puce('Phare', f.niveau_phare); puce('Éliminations', f.eliminations == null ? null : String(f.eliminations).replace(/^([\d.]+)\s*([KMB])$/i, (x, n, u) => n.replace('.', ',') + ' ' + u.toUpperCase())); puce('Badge', f.badge_lv != null ? 'niv. ' + f.badge_lv : null); puce('Popularité', f.popularite != null ? rfgNb(f.popularite) : null);
+    const puce = (l, v) => { if (v == null || v === '') return; const p = rfgEl('span'); p.append(rfg.t(l) + ' '); p.append(rfgEl('b', '', String(v))); fiche.append(p); };
+    puce('Phare', f.niveau_phare); puce('Éliminations', f.eliminations == null ? null : String(f.eliminations).replace(/^([\d.]+)\s*([KMB])$/i, (x, n, u) => n.replace('.', ',') + ' ' + u.toUpperCase())); puce('Badge', f.badge_lv != null ? rfg.t('niv.') + ' ' + f.badge_lv : null); puce('Popularité', f.popularite != null ? rfgNb(f.popularite) : null);
     if (fiche.childNodes.length) c.append(fiche);
     grille.append(c);
   }
@@ -969,10 +1037,10 @@ dash.draw('carte', (el) => {
     .style('stroke', (r) => r.statut === 'Le Refuge' ? '#fff' : r.statut === 'Allié' ? '#f2c94c' : 'rgba(0,0,0,.35)')
     .attr('stroke-width', (r) => r.statut === 'Le Refuge' ? 3 : r.statut === 'Allié' ? 2 : 1);
   if (W > 420) g1.filter((r) => r.statut !== 'Libre' || r.type === 'Arche Suprême').append('text').attr('y', (r) => -r0 * (0.75 + Number(r.niveau) * 0.18) - 3).attr('text-anchor', 'middle')
-    .style('fill', RFG_C.texte).style('font-size', '9px').style('opacity', .85).text((r) => r.type === 'Arche Suprême' ? 'Arche' : r.alliance);
+    .style('fill', RFG_C.texte).style('font-size', '9px').style('opacity', .85).text((r) => r.type === 'Arche Suprême' ? rfg.t('Arche') : r.alliance);
   const tip = rfgEl('div', 'tip'); tip.hidden = true; el.append(tip);
   g1.on('pointerenter', (ev, r) => {
-    tip.replaceChildren(rfgEl('div', 't', r.type === 'Arche Suprême' ? 'Arche Suprême' : (r.statut === 'Libre' ? 'Libre' : '[' + r.alliance + ']') + ' · ' + r.statut), rfgEl('div', '', r.type + ' · niveau ' + r.niveau));
+    tip.replaceChildren(rfgEl('div', 't', r.type === 'Arche Suprême' ? rfg.t('Arche Suprême') : (r.statut === 'Libre' ? rfg.t('Libre') : '[' + r.alliance + ']') + ' · ' + rfg.t(r.statut)), rfgEl('div', '', rfg.t(r.type) + ' · ' + rfg.t('niveau') + ' ' + r.niveau));
     tip.hidden = false;
     const k = el.clientWidth / W, px = x(r.x) * k, py = y(r.y) * k;
     tip.style.left = Math.min(Math.max(0, px - tip.offsetWidth / 2), el.clientWidth - tip.offsetWidth) + 'px';
@@ -980,7 +1048,7 @@ dash.draw('carte', (el) => {
   }).on('pointerleave', () => { tip.hidden = true; });
   const leg = rfgEl('div', 'legende');
   const item = (c, t) => { const s = rfgEl('span'); const i = rfgEl('i'); i.style.background = c; s.append(i, document.createTextNode(t)); leg.append(s); };
-  item('#ff4fd8', 'Le Refuge'); item('#f2c94c', 'Contour doré : allié'); item('#9fb6d6', 'Libre'); item('#ffffff', 'Arche Suprême');
+  item('#ff4fd8', 'Le Refuge'); item('#f2c94c', rfg.t('Contour doré : allié')); item('#9fb6d6', rfg.t('Libre')); item('#ffffff', rfg.t('Arche Suprême'));
   el.append(leg);
 });
 
@@ -997,7 +1065,7 @@ dash.draw('terr-barres', (el) => {
     .style('fill', (r) => r.statut === 'Le Refuge' ? '#ff4fd8' : r.statut === 'Allié' ? RFG_C.or : RFG_C.texte).style('font-size', 'var(--cds-font-size-caption)').text(lab);
   const lw = d3.max(labels.nodes(), (n) => n.getComputedTextLength()) + 10;
   const vals = svg.selectAll('text.v').data(rows).join('text').attr('class', 'v').attr('y', (r, i) => i * (bh + gap) + bh / 2 + 4)
-    .style('fill', RFG_C.muet).style('font-size', 'var(--cds-font-size-caption)').style('font-variant-numeric', 'tabular-nums').text((r) => r.valeur + ' · niv. ' + r.niveaux);
+    .style('fill', RFG_C.muet).style('font-size', 'var(--cds-font-size-caption)').style('font-variant-numeric', 'tabular-nums').text((r) => r.valeur + ' · ' + rfg.t('niv.') + ' ' + r.niveaux);
   const vw = d3.max(vals.nodes(), (n) => n.getComputedTextLength()) + 8;
   const x = d3.scaleLinear([0, d3.max(rows, (r) => r.valeur) || 1], [0, Math.max(10, W - lw - vw)]);
   svg.selectAll('rect').data(rows).join('rect').attr('x', lw).attr('y', (r, i) => i * (bh + gap)).attr('height', bh).attr('rx', 4)
@@ -1118,7 +1186,7 @@ dash.draw('fiche-courbe', (el) => {
     const [px] = d3.pointer(ev);
     const i = rows.reduce((b, r, k) => Math.abs(x(r.cle) - px) < Math.abs(x(rows[b].cle) - px) ? k : b, 0), r = rows[i];
     const t = document.createElement('div'); t.className = 't';
-    t.textContent = rfg.dateFr(r.date) + (r.releve !== 'Hebdo' ? ' · ' + r.releve + ' ' + r.evenement : '') + ' · ' + r.rang;
+    t.textContent = rfg.dateFr(r.date) + (r.releve !== 'Hebdo' ? ' · ' + rfg.t(r.releve) + ' ' + r.evenement : '') + ' · ' + r.rang;
     const v = document.createElement('div');
     v.textContent = rfg.fmt(r.p, 'm') + (i > 0 ? ' (' + rfg.signed(r.p - rows[i - 1].p, 'm') + ')' : '');
     tip.replaceChildren(t, v); tip.hidden = false;
@@ -1135,14 +1203,83 @@ dash.draw('fiche-ev', (tb) => {
   for (const r of g.data.filter((x) => x.membre === nom)) {
     const tr = document.createElement('tr');
     tr.dataset.key = encodeURIComponent(r.membre) + ',' + encodeURIComponent(r.evenement);
-    rfgCell(tr, r.titre);
+    rfgCell(tr, rfg.t(r.titre));
     rfgCell(tr, r.classement == null ? '—' : String(r.classement), 'num');
     rfgCell(tr, r.score == null ? '—' : rfg.fmt(r.score, 'int'), 'num');
     const td = rfgCell(tr, ''), p = document.createElement('span');
     p.className = 'pill ' + (r.statut === 'Inscrit absent' || r.statut === 'Absent du classement' ? 'bad' : r.statut === 'Non inscrit' || r.statut === 'Présent sans inscription' ? 'warn' : 'ok');
-    p.textContent = r.statut; td.append(p);
+    p.textContent = rfg.t(r.statut); td.append(p);
     tb.append(tr);
   }
+});
+
+
+dash.calc('tech_dernier', {
+  title: "Technologies d'alliance au dernier relevé",
+  description: "Les technologies d'alliance (Croissance, Territoire, Guerre) lors du relevé le plus récent, dans l'ordre de l'arbre du jeu.",
+  inputs: ['tech'],
+  fn: (tech) => { const d = tech.reduce((m, r) => r.date > m ? r.date : m, ''); return tech.filter((r) => r.date === d).sort((a, b) => a.ordre - b.ordre); }
+});
+dash.calc('tech_resume', {
+  title: 'Synthèse des technologies',
+  description: "Nombre de technologies d'alliance terminées, en progression, à démarrer et verrouillées au dernier relevé.",
+  inputs: ['tech_dernier'],
+  fn: (tech_dernier) => tech_dernier.length ? [{
+    date: tech_dernier[0].date, total: tech_dernier.length,
+    terminees: tech_dernier.filter((r) => r.statut === 'Terminée').length,
+    en_cours: tech_dernier.filter((r) => r.statut === 'En cours').length,
+    disponibles: tech_dernier.filter((r) => r.statut === 'Disponible').length,
+    verrouillees: tech_dernier.filter((r) => r.statut === 'Verrouillée').length
+  }] : []
+});
+dash.draw('tech', (el) => {
+  const g = dash.data('tech_dernier');
+  el.replaceChildren();
+  el.classList.toggle('dash-skeleton', g.status === 'loading');
+  if (g.status === 'error') return rfgFail(el);
+  if (g.status !== 'ok') return;
+  if (!g.data.length) { el.append(rfgEl('p', 'vide', rfg.t('Pas encore de relevé des technologies.'))); return; }
+  const cls = {'Terminée': 'fini', 'En cours': 'encours', 'Disponible': 'dispo', 'Verrouillée': 'verrou'};
+  for (const b of ['Croissance', 'Territoire', 'Guerre']) {
+    const rs = g.data.filter((r) => r.branche === b);
+    if (!rs.length) continue;
+    const col = rfgEl('div', 'tech-col');
+    col.append(rfgEl('h3', '', rfg.t(b)), rfgEl('p', 'note', rs.filter((r) => r.statut === 'Terminée').length + ' / ' + rs.length + ' ' + rfg.t('terminées')));
+    const ul = rfgEl('ul', 'tech-liste');
+    for (const r of rs) {
+      const li = rfgEl('li', 'tech-item ' + (cls[r.statut] || ''));
+      const haut = rfgEl('div', 'tech-haut'), nom = rfgEl('span', 'tech-nom', rfg.t(r.technologie));
+      if (r.recommandee) { const p = rfgEl('span', '', ' 👍'); p.title = rfg.t('Recommandée par les officiers'); nom.append(p); }
+      haut.append(nom, rfgEl('span', 'tech-niv', r.affichage));
+      const barre = rfgEl('div', 'tech-barre'), f = rfgEl('span');
+      f.style.width = (r.statut === 'Terminée' ? 100 : r.niveau_max ? Math.min(100, r.niveau / r.niveau_max * 100) : 0) + '%';
+      barre.append(f);
+      li.append(haut, barre); ul.append(li);
+    }
+    col.append(ul); el.append(col);
+  }
+});
+
+const RFG_LANGUES = ['fr', 'en', 'es'];
+const RFG_TITRES = {fr: "<RFG> Le Refuge · Suivi de l'alliance", en: '<RFG> Le Refuge · Alliance tracker', es: '<RFG> Le Refuge · Seguimiento de la alianza'};
+document.querySelectorAll('.rfg .langues a[data-lang]').forEach((a) => a.addEventListener('click', (ev) => {
+  ev.preventDefault();
+  const l = a.dataset.lang;
+  dash.setParams({lang: l === 'fr' ? null : l});
+  if (window.RFG_SITE) { try { history.replaceState(null, '', l === 'fr' ? location.pathname + location.hash : '?lang=' + l + location.hash); } catch (e) { /* ignore */ } }
+}));
+if (window.RFG_SITE && !dash.params().lang) {
+  try { const l = new URLSearchParams(location.search).get('lang'); if (l === 'en' || l === 'es') dash.setParams({lang: l}); } catch (e) { /* ignore */ }
+}
+dash.onData(() => {
+  const l = rfg.lang();
+  document.querySelectorAll('.rfg').forEach((n) => { n.classList.toggle('l-en', l === 'en'); n.classList.toggle('l-es', l === 'es'); });
+  document.querySelectorAll('.rfg .langues a[data-lang]').forEach((a) => {
+    a.classList.toggle('actif', a.dataset.lang === l);
+    if (a.dataset.lang === l) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+  });
+  document.querySelectorAll('.rfg [data-aria-fr]').forEach((n) => n.setAttribute('aria-label', n.dataset['aria' + l[0].toUpperCase() + l[1]] || n.dataset.ariaFr));
+  if (window.RFG_SITE) { document.documentElement.lang = l; document.title = RFG_TITRES[l]; }
 });
 
 dash.onData(() => {
@@ -1188,8 +1325,8 @@ const rfgChargerH2C = () => window.html2canvas ? Promise.resolve(window.html2can
 document.querySelectorAll('.fiche-export').forEach((b) => b.addEventListener('click', async () => {
   const fiche = b.closest('.fiche'), nom = dash.params().membre;
   if (!fiche || !nom) return;
-  const libelle = b.textContent;
-  b.disabled = true; b.textContent = '⏳ Préparation…';
+  const libelle = b.innerHTML;
+  b.disabled = true; b.textContent = rfg.t('⏳ Préparation…');
   try {
     const h2c = await rfgChargerH2C();
     fiche.classList.add('export-en-cours');
@@ -1205,11 +1342,11 @@ document.querySelectorAll('.fiche-export').forEach((b) => b.addEventListener('cl
     setTimeout(() => URL.revokeObjectURL(lien.href), 5000);
   } catch (e) {
     console.error(e);
-    alert("L'export en image n'a pas pu se faire. Réessaie, ou fais une capture d'écran de la fiche.");
+    alert(rfg.t("L'export en image n'a pas pu se faire. Réessaie, ou fais une capture d'écran de la fiche."));
   } finally {
     fiche.classList.remove('export-en-cours');
     if (fiche.style.width) { fiche.style.width = ''; fiche.style.maxWidth = ''; dash.draw('fiche-courbe'); }
-    b.disabled = false; b.textContent = libelle;
+    b.disabled = false; b.innerHTML = libelle;
   }
 }));
 </script>
