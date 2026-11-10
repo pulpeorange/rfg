@@ -42,7 +42,7 @@ window.dash = (() => {
   window.addEventListener('DOMContentLoaded', () => {
     all();
     const files = {releves: 'data/releves.json', evenements: 'data/evenements.json', ev_resume: 'data/evenements_resume.json', territoires: 'data/territoires.json'};
-    const optionnels = {classement: 'data/classement.json'};
+    const optionnels = {classement: 'data/classement.json', tech: 'data/tech.json'};
     const charges = Object.entries(files).map(([id, f]) => fetch(f, {cache: 'no-store'}).then((r) => r.json()).then((j) => { store[id] = j.rows || j; }));
     const charges2 = Object.entries(optionnels).map(([id, f]) => fetch(f, {cache: 'no-store'}).then((r) => r.ok ? r.json() : {rows: []}).catch(() => ({rows: []})).then((j) => { store[id] = j.rows || j; }));
     Promise.all([...charges, ...charges2]).then(() => {
@@ -177,6 +177,27 @@ window.dash = (() => {
   .rfg .fiche .note b { color: var(--or-pale); font-weight: 600; }
   .rfg .fiche .ev-tete { grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); }
   .rfg .fiche .tbox td:last-child { white-space: normal; }
+  /* Technologies d'alliance */
+  .rfg .tk-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: var(--cds-gap-md); }
+  .rfg .tk-col { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 14px; border: 1px solid var(--bord); background: rgba(8, 23, 51, .55); }
+  .rfg .tk-tete { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .rfg .tk-tete h3 { margin: 0; font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 1.25rem; color: #fff; }
+  .rfg .tk-tete span { color: var(--muet); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .rfg .tk-barre { height: 8px; border-radius: 4px; background: rgba(159, 182, 214, .15); overflow: hidden; }
+  .rfg .tk-barre span { display: block; height: 100%; background: var(--or); }
+  .rfg .tk-liste { display: flex; flex-direction: column; gap: 7px; margin: 0; padding: 0; list-style: none; }
+  .rfg .tk-ligne { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; font-size: var(--cds-font-size-caption); }
+  .rfg .tk-ligne .nom { color: var(--texte); overflow-wrap: anywhere; }
+  .rfg .tk-ligne .niv { color: var(--muet); font-variant-numeric: tabular-nums; text-align: right; }
+  .rfg .tk-ligne .mini { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: rgba(159, 182, 214, .15); overflow: hidden; }
+  .rfg .tk-ligne .mini span { display: block; height: 100%; background: #40a0ff; }
+  .rfg .tk-ligne.verrou .nom, .rfg .tk-ligne.verrou .niv { color: rgba(159, 182, 214, .55); }
+  .rfg .tk-ligne.reco .nom { color: var(--or-pale); font-weight: 600; }
+  .rfg .tk-ligne.reco .mini span { background: var(--or); }
+  .rfg .tk-badge { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: .72rem; font-weight: 600; vertical-align: 1px; background: rgba(242, 201, 76, .18); color: var(--or-pale); border: 1px solid rgba(242, 201, 76, .4); }
+  .rfg .tk-faites { font-size: var(--cds-font-size-caption); color: var(--muet); padding-top: 8px; border-top: 1px solid rgba(159, 182, 214, .15); }
+  .rfg .tk-faites summary { cursor: pointer; color: var(--texte); }
+  .rfg .tk-faites ul { margin: 6px 0 0; padding-left: 1.1em; }
   /* Classement de la semaine */
   .rfg .cl-tete { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--cds-gap-md); flex-wrap: wrap; }
   .rfg .cl-bareme { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: var(--cds-font-size-caption); color: var(--muet); margin: 0 0 var(--cds-gap-md); }
@@ -371,6 +392,12 @@ window.dash = (() => {
     <p class="note">Top 4 des membres hors R4 et R5, établi chaque vendredi sur 100 points. Clique sur un pseudo pour ouvrir sa fiche.</p>
     <p class="cl-bareme"><span><i style="background:#f2c94c"></i>Progression de puissance · 40 pts</span><span><i style="background:#a985ff"></i>Piège Léviathan · 30 pts</span><span><i style="background:#40a0ff"></i>Guerre d'Oasis · 30 pts</span></p>
     <div class="ev-vue" data-draw="classement" data-source="classement membres"></div>
+  </section>
+
+  <section class="card">
+    <h2 class="ancre" id="technologies">Technologies d'alliance</h2>
+    <p class="note">Avancement des recherches de l'alliance, relevé dans Alliance &gt; Tech. En doré : la technologie recommandée par le jeu.</p>
+    <div class="ev-vue" data-draw="tech" data-source="tech"></div>
   </section>
 
   <section class="card">
@@ -761,6 +788,52 @@ dash.draw('cl-choix', (sel) => {
   if (s.length) sel.value = s.includes(rfgCl.semaine) ? rfgCl.semaine : s[0];
   sel.onchange = () => { rfgCl.semaine = sel.value; dash.draw('classement'); };
 });
+dash.draw('tech', (el) => {
+  const g = dash.data('tech');
+  el.replaceChildren();
+  el.classList.toggle('dash-skeleton', g.status === 'loading');
+  if (g.status === 'error') return rfgFail(el);
+  if (g.status !== 'ok') return;
+  if (!g.data.length) { el.append(rfgEl('p', 'vide', 'Pas encore de relevé des technologies.')); return; }
+  const date = g.data.map((r) => r.date).sort().pop();
+  const rows = g.data.filter((r) => r.date === date).sort((a, b) => a.ordre - b.ordre);
+  el.append(rfgEl('p', 'note', 'Relevé du ' + rfg.dateFr(date)));
+  const ordreStatut = {'En cours': 0, 'Disponible': 1, 'Verrouillée': 2};
+  const grille = rfgEl('div', 'tk-grille');
+  for (const b of ['Croissance', 'Territoire', 'Guerre']) {
+    const t = rows.filter((r) => r.branche === b);
+    if (!t.length) continue;
+    const faites = t.filter((r) => r.statut === 'Terminée');
+    const col = rfgEl('div', 'tk-col');
+    const tete = rfgEl('div', 'tk-tete');
+    tete.append(rfgEl('h3', '', b), rfgEl('span', '', faites.length + ' / ' + t.length + ' terminées'));
+    const barre = rfgEl('div', 'tk-barre'), f = rfgEl('span'); f.style.width = (faites.length / t.length * 100) + '%'; barre.append(f);
+    col.append(tete, barre);
+    const reste = t.filter((r) => r.statut !== 'Terminée').sort((x, y) => (y.recommandee - x.recommandee) || (ordreStatut[x.statut] - ordreStatut[y.statut]) || (x.ordre - y.ordre));
+    if (reste.length) {
+      const ul = rfgEl('ul', 'tk-liste');
+      for (const r of reste) {
+        const li = rfgEl('li', 'tk-ligne' + (r.statut === 'Verrouillée' ? ' verrou' : '') + (r.recommandee ? ' reco' : ''));
+        const nom = rfgEl('span', 'nom', r.technologie);
+        if (r.recommandee) nom.append(rfgEl('span', 'tk-badge', 'Recommandée'));
+        li.append(nom, rfgEl('span', 'niv', (r.statut === 'Verrouillée' ? '🔒 ' : '') + (r.affichage || '')));
+        const mini = rfgEl('div', 'mini'), m = rfgEl('span');
+        m.style.width = (r.niveau_max ? Math.min(100, (r.niveau || 0) / r.niveau_max * 100) : 0) + '%';
+        mini.append(m); li.append(mini); ul.append(li);
+      }
+      col.append(ul);
+    }
+    if (faites.length) {
+      const d = rfgEl('details', 'tk-faites');
+      d.append(rfgEl('summary', '', faites.length + ' technologie' + (faites.length > 1 ? 's' : '') + ' au maximum'));
+      const ul = rfgEl('ul'); for (const r of faites) ul.append(rfgEl('li', '', r.technologie)); d.append(ul);
+      col.append(d);
+    }
+    grille.append(col);
+  }
+  el.append(grille);
+});
+
 dash.draw('classement', (el) => {
   const g = dash.data('classement'), gm = dash.data('membres');
   el.replaceChildren();
