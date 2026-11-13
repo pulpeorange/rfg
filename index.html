@@ -469,7 +469,9 @@ window.RFG_I18N = (() => {
     ['Inscrits absents', 'Registered but absent', 'Inscritos ausentes'], ['inscrits sans aucun point', 'registered, no points', 'inscritos sin ningún punto'],
     ['Personne.', 'Nobody.', 'Nadie.'], ['Puissance', 'Power', 'Poder'], ['Dernière connexion', 'Last login', 'Última conexión'],
     ['Présents', 'Present', 'Presentes'], [' (non inscrit)', ' (not registered)', ' (no inscrito)'],
-    ['Semaine du', 'Week of', 'Semana del'],
+    ['Semaine du', 'Week of', 'Semana del'], ['Du vendredi', 'From Friday', 'Del viernes'], ['au vendredi', 'to Friday', 'al viernes'],
+    ["Pas de Guerre d'Oasis cette semaine : ses points sont répartis sur les autres critères.", 'No Oasis War this week: its points are shared out among the other criteria.', 'Sin Guerra del Oasis esta semana: sus puntos se reparten entre los demás criterios.'],
+    ['Pas de Piège Léviathan cette semaine : ses points sont répartis sur les autres critères.', 'No Leviathan Trap this week: its points are shared out among the other criteria.', 'Sin Trampa del Leviatán esta semana: sus puntos se reparten entre los demás criterios.'],
     ['Le premier classement sera publié vendredi.', 'The first ranking will be published on Friday.', 'La primera clasificación se publicará el viernes.'],
     ['Léviathan', 'Leviathan', 'Leviatán'], ['Oasis', 'Oasis', 'Oasis'], ['Puissance :', 'Power:', 'Poder:'],
     [' sur la semaine', ' over the week', ' en la semana'], ['Phare', 'Beacon', 'Faro'], ['Éliminations', 'Kills', 'Eliminaciones'],
@@ -913,9 +915,14 @@ dash.draw('classement', (el) => {
   const sem = s.includes(rfgCl.semaine) ? rfgCl.semaine : s[0];
   const rows = g.data.filter((r) => r.semaine === sem).sort((a, b) => a.classement - b.classement);
   const mem = new Map((gm.status === 'ok' ? gm.data : []).map((m) => [m.membre, m]));
-  el.append(rfgEl('p', 'note', rfg.t('Semaine du') + ' ' + rfg.dateFr(sem)));
-  const m1 = (v) => rfg.fmt(v, 'm'), dec = (v) => v == null ? '—' : String(v).replace('.', ',');
-  const parts = [['Puissance', 'pts_puissance', 40, '#f2c94c'], ['Léviathan', 'pts_leviathan', 30, '#a985ff'], ['Oasis', 'pts_oasis', 30, '#40a0ff']];
+  const debut = rows.length && rows[0].debut;
+  el.append(rfgEl('p', 'note', debut ? rfg.t('Du vendredi') + ' ' + rfg.dateFr(debut) + ' ' + rfg.t('au vendredi') + ' ' + rfg.dateFr(sem) : rfg.t('Semaine du') + ' ' + rfg.dateFr(sem)));
+  const m1 = (v) => rfg.fmt(v, 'm'), dec = (v) => v == null ? '—' : String(Math.round(v * 10) / 10).replace('.', ',');
+  const base = [['Puissance', 'pts_puissance', 40, '#f2c94c'], ['Léviathan', 'pts_leviathan', 30, '#a985ff'], ['Oasis', 'pts_oasis', 30, '#40a0ff']];
+  const absents = base.filter(([, k]) => k !== 'pts_puissance' && rows.every((r) => r[k] == null));
+  const actifs = base.filter((p) => !absents.includes(p)), total = actifs.reduce((s, p) => s + p[2], 0);
+  const parts = actifs.map(([l, k, m, c]) => [l, k, Math.round(m * 1000 / total) / 10, c]);
+  for (const [l] of absents) el.append(rfgEl('p', 'note', rfg.t(l === 'Oasis' ? "Pas de Guerre d'Oasis cette semaine : ses points sont répartis sur les autres critères." : 'Pas de Piège Léviathan cette semaine : ses points sont répartis sur les autres critères.')));
   const grille = rfgEl('div', 'cl-grille');
   for (const r of rows) {
     const c = rfgEl('div', 'cl-carte' + (r.classement <= 3 ? ' p' + r.classement : ''));
@@ -934,7 +941,7 @@ dash.draw('classement', (el) => {
     for (const [lbl, k, max, col] of parts) {
       det.append(rfgEl('span', 'lbl', rfg.t(lbl)));
       const sb = rfgEl('div', 'sous-barre'), f = rfgEl('span'); f.style.width = Math.min(100, (Number(r[k]) || 0) / max * 100) + '%'; f.style.background = col; sb.append(f); det.append(sb);
-      det.append(rfgEl('span', 'val', dec(r[k]) + ' / ' + max));
+      det.append(rfgEl('span', 'val', dec(r[k]) + ' / ' + dec(max)));
     }
     c.append(det);
     if (r.gain_puissance != null) c.append(rfgEl('div', 'cl-sous', rfg.t('Puissance :') + ' ' + rfg.signed(r.gain_puissance, 'm') + (r.gain_pct != null ? ' (' + (r.gain_pct > 0 ? '+' : '') + dec(r.gain_pct) + ' %)' : '') + rfg.t(' sur la semaine')));
